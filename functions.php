@@ -36,7 +36,7 @@ register_deactivation_hook( __FILE__, 'deactivateTheme');
 
 class StarterSite extends Timber\Site {
     /** Add timber support. */
-    public function register() {
+    public function __construct() {
         add_action( 'after_setup_theme', array( $this, 'themeSupports' ) );
         add_filter( 'timber/context', array( $this, 'addToContext' ) );
         add_filter( 'timber/twig', array( $this, 'addToTwig' ) );
@@ -60,7 +60,7 @@ class StarterSite extends Timber\Site {
     public function registerTaxonomies() {}
 
     public function addToContext( $context ) {
-        $context['menu']  = new Timber\Menu();
+        $context['menu']  = new Timber\Menu('header');
         $context['site']  = $this;
         return $context;
     }
@@ -88,8 +88,13 @@ class StarterSite extends Timber\Site {
                               'audio',
                           )
         );
-        add_theme_support( 'menus' );
+//        add_theme_support( 'menus' );
         add_theme_support( 'woocommerce' );
+
+        register_nav_menus( array(
+            'header' => 'Header menu',
+            'footer' => 'Footer menu'
+        ) );
     }
 
     public function addToTwig( $twig ) {

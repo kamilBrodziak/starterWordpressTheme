@@ -4,9 +4,10 @@
             {% endblock %}
             </head>
         {% endblock %}
-	<body class='{{body_class}}' data-template='base.twig'>
+	<body class='{{body_class}} test' data-template='base.twig'>
         <div id='siteContainer'>
-            {% include 'partials/header.twig' %}
+            {% include 'partials/header/header.twig' %}
+            {% include 'partials/nav/nav.twig' with {navID: 'siteNav'} %}
             <main>
                 {% block content %}
                     Sorry, no content

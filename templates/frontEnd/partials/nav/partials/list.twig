@@ -1,0 +1,9 @@
+{% if menu %}
+    <ul id="{{ navID }}Menu" class="listStyleNone">
+        {% for item in menu.get_items %}
+            <li class="{{ navID }}MenuItem">
+                <a class='flexCentered' href='{{ item.link }}'>{{ item.title }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}

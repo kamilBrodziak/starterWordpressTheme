@@ -16,6 +16,10 @@
   transition: all 0.3s ease;
 }
 
+.listStyleNone {
+  list-style: none;
+}
+
 .borderRadiusTen {
   border-radius: 10px;
 }
@@ -39,6 +43,7 @@ div, section, article {
 a {
   text-decoration: none;
   cursor: pointer;
+  color: black;
 }
 
 input {

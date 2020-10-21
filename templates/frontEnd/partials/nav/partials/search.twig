@@ -1,0 +1,10 @@
+<form id='{{ navID }}Search' role='search' class="" method="get" action="{{fn("home_url", '/')}}">
+    <label id="{{ navID }}SearchFieldLabel" class="">
+        <input type="text" id="{{ navID }}SearchField" class="" name="s"
+               placeholder="Szukaj..." value="{{ fn('the_search_query') }}">
+    </label>
+    <div id="{{ navID }}SearchResults" class=""></div>
+    <div id='{{ navID }}SearchSubmitContainer'>
+        <button id='{{ navID }}SearchSubmit' class="" type="submit">Szukaj</button>
+    </div>
+</form>
