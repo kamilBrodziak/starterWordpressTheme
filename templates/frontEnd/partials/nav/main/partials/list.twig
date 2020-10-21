@@ -1,0 +1,9 @@
+{% if menu %}
+    <ul id="siteNavList">
+        {% for item in menu.get_items %}
+            <li class="siteNavListItem">
+                <a class='' href='{{ item.link }}'>{{ item.title }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}
