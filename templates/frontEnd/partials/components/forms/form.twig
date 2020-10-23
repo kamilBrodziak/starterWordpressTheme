@@ -1,0 +1,35 @@
+{% if form %}
+    <form action="{{ form.action }}"{% if form.class %} class="{{ form.class }}"{% endif %}>
+        {% for input in form.inputs %}
+            <label{% if input.label.class %} class="{{ input.label.class }}"{% endif %}>
+                {% if input.label %}
+                    <span>{{ input.labelText }}</span>
+                {% endif %}
+                {% if input.tag == 'input' %}
+                    <input type="{{ input.type }}" name="{{ input.name }}"
+                            {% if input.id %} id="{{ input.id }}"{% endif %}
+                            class="formInput{% if input.class %} {{ input.class }}{% endif %}"
+                            {% if input.placeholder %} placeholder="{{ input.placeholder }}"{% endif %}
+                            {% if input.required %} required="required"{% endif %}
+                            {% if input.min %} min="{{ input.min }}"{% endif %}
+                            {% if input.max %} min="{{ input.max }}"{% endif %}
+                            {% if input.title %} title="{{ input.title }}"{% endif %}
+                            {% if input.pattern %} pattern="{{ input.pattern }}"{% endif %}
+                            {% if input.value %} value="{{ input.value }}"{% endif %}
+                    >
+                {% elseif input.tag == 'textarea' %}
+                    <textarea name="{{ input.name }}"
+                                {% if input.id %} id="{{ input.id }}"{% endif %}
+                            {% if input.cols %} cols="{{ input.cols }}"{% endif %}
+                            {% if input.rows %} rows="{{ input.rows }}"{% endif %}
+                            {% if input.placeholder %} placeholder="{{ input.placeholder }}"{% endif %}
+                            {% if input.required %} required="required"{% endif %}
+                    ></textarea>
+                {% endif %}
+            </label>
+        {% endfor %}
+        <button type="submit" class="{{ form.button.class }}">
+            {% if form.button.text %}{{ form.button.text }}{% endif %}
+        </button>
+    </form>
+{% endif %}

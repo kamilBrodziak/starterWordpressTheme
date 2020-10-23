@@ -42,7 +42,8 @@ class StarterSite extends Timber\Site {
         add_filter( 'timber/twig', array( $this, 'addToTwig' ) );
         add_action( 'init', array( $this, 'registerPostTypes' ) );
         add_action( 'init', array( $this, 'registerTaxonomies' ) );
-        $this->removeWordpressUnnecessaryActions();
+	    add_action('init', array($this, 'adjustImgSizes'));
+	    $this->removeWordpressUnnecessaryActions();
         parent::__construct();
     }
 
@@ -56,16 +57,34 @@ class StarterSite extends Timber\Site {
         remove_action('template_redirect', 'rest_output_link_header', 11, 0);
     }
 
-    public function registerPostTypes() {}
-    public function registerTaxonomies() {}
+	public function adjustImgSizes() {
+		remove_image_size( 'woocommerce_thumbnail' );
+		remove_image_size( 'woocommerce_single' );
+		remove_image_size( 'woocommerce_gallery_thumbnail' );
+		remove_image_size( 'shop_catalog' );
+		remove_image_size( 'shop_single' );
+		remove_image_size( 'shop_thumbnail' );
+		add_image_size('product_tease', 250);
+		add_image_size('mobile', 480);
+		add_image_size('very_large', 1280);
+		add_image_size('largest', 1920);
+	}
+
+	public function registerPostTypes() {}
+	public function registerTaxonomies() {}
 
     public function addToContext( $context ) {
         $context['menu']  = new Timber\Menu('header');
         $context['site']  = $this;
+
+        $logoID = get_theme_mod('custom_logo');
+        if($logoID) {
+            $context['siteLogo'] = getImgObjForTwig($logoID, ['medium', 'mobile', 'medium_large', 'large', 'very_large', 'largest']);
+        }
         return $context;
     }
 
-    public function themeSupports() {
+	public function themeSupports() {
         add_theme_support( 'automatic-feed-links' );
         add_theme_support( 'title-tag' );
         add_theme_support( 'post-thumbnails' );
@@ -95,9 +114,10 @@ class StarterSite extends Timber\Site {
             'header' => 'Header menu',
             'footer' => 'Footer menu'
         ) );
+        add_theme_support( 'custom-logo' );
     }
 
-    public function addToTwig( $twig ) {
+	public function addToTwig( $twig ) {
         $twig->addExtension( new Twig\Extension\StringLoaderExtension() );
         //        $twig->addFilter( new Twig\TwigFilter( 'myfoo', array( $this, 'myfoo' ) ) );
         return $twig;
@@ -109,17 +129,82 @@ if(class_exists('Inc\\Init')) {
     Inc\Init::registerServices();
 }
 
+function getImgObjForTwig($imgID, $specificSizes = []) {
+	$logo = [
+		'sizes' => [],
+		'alt' => get_post_meta( $imgID, '_wp_attachment_image_alt', true)
+	];
+	$sizes = wp_get_attachment_metadata($imgID)['sizes'];
+	if(!empty($specificSizes)){
+		$allSizes = $sizes;
+		$sizes = [];
+		foreach($allSizes as $size => $args) {
+			if(in_array($size, $specificSizes)) {
+				$sizes[$size] = $args;
+			}
+		}
+	}
+	uasort($sizes, function ($a, $b) {return $a['width'] - $b['width'];});
+	$sizes['full'] = ['width' => false];
+	$srcSet = [];
+	foreach ($sizes as $size => $args) {
+		$imgAttrs = wp_get_attachment_image_src( $imgID, $size );
+		$srcSet[] = "${imgAttrs[0]} ${imgAttrs[1]}w";
+		$url = wp_get_attachment_image_url( $imgID, $size);
+		$logo['sizes'][$size] = [];
+        $logo['sizes'][$size]['src'] = $url;
+		if($args['width']) {
+			$logo['sizes'][$size]['width'] = "${args['width']}px";
+		}
+	}
+	$logo['srcSet'] = join(",", $srcSet);
+	return $logo;
+}
 
+//add_filter('wp_generate_attachment_metadata', 'uploadedImgToWebp', 10, 2);
+//function uploadedImgToWebp($metadata, $id) {
+//    if(wp_attachment_is_image($id)) {
+//        $sizes = ['large', 'medium_large', 'medium', 'thumbnail'];
+//        $srcFull = wp_get_attachment_image_url( $id, 'full');
+//        Timber\ImageHelper::img_to_webp($srcFull);
+//        $metadata['webpSrc'] = [];
+//
+//        $metadata['webpSrc']['full'] = substr_replace($srcFull , 'webp', strrpos($srcFull , '.') +1);
+//
+//        foreach ($sizes as $size) {
+//            $src = wp_get_attachment_image_url( $id, $size);
+//            if($src != $srcFull ) {
+//                Timber\ImageHelper::img_to_webp($src);
+//	            $metadata['webpSrc'][$size] = substr_replace($src , 'webp', strrpos($src , '.') +1);
+//            }
+//        }
+//    }
+//    return $metadata;
+//}
 
-
-
-
+add_action('delete_attachment', 'deleteImgWebp', 10, 2);
+function deleteImgWebp($id) {
+	if(wp_attachment_is_image($id)) {
+		$sizes = wp_get_attachment_metadata($id)['sizes'];
+		$sizes[] = ['full' => []];
+		foreach ($sizes as $size => $attrs) {
+			$src = wp_get_attachment_image_url($id, $size);
+			$path = parse_url(substr_replace($src , 'webp', strrpos($src , '.') +1), PHP_URL_PATH);
+			$fullPath = $_SERVER['DOCUMENT_ROOT'] . $path;
+			if(file_exists($fullPath)) {
+				unlink($fullPath);
+			}
+		}
+	}
+}
 
 
 
 /**
  * WOOCOMMERCE
  **/
+
+
 
 function timber_set_product( $post ) {
 	global $product;

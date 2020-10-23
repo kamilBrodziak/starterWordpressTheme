@@ -1,0 +1,7 @@
+@import "mobile/layout";
+@import "mobile/form";
+
+@media all and (min-width: 996px) {
+    @import "desktop/layout";
+    @import "desktop/form";
+}

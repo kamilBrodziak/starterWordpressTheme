@@ -1,0 +1,16 @@
+.labelHorizontal {
+    span {
+        margin: 0 10px 0 0;
+    }
+    
+    input:not([type='checkbox']), textarea {
+        text-align: inherit;
+        display: block;
+        width: 250px;
+        height: 50px;
+    }
+    input[type='checkbox'] {
+        width: 30px;
+        height: 30px;
+    }
+}

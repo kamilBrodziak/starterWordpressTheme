@@ -26,3 +26,12 @@ input {
         cursor: not-allowed;
     }
 }
+
+button {
+    outline: none;
+    cursor: pointer;
+}
+
+textarea, input {
+    padding: 5px;
+}
