@@ -1,0 +1,60 @@
+{% include 'partials/components/forms/contactForm.twig' with {
+    'form': {
+        'action': '',
+        'class': 'siteFtrNewsletterForm',
+        'inputs': [
+            {
+                'tag': 'input',
+                'type': 'text',
+                'name': 'name',
+                'placeholder': 'Your name...',
+                'label': {
+                    'text': 'Name:',
+                    'class': 'labelVertical flexCentered textCenter'
+                },
+                'required': 'required',
+                'pattern': '[a-zA-Z ]+',
+                'title': 'Insert proper name using only letters!',
+                'maxLength': '50'
+            },
+            {
+                'tag': 'input',
+                'type': 'email',
+                'name': 'email',
+                'placeholder': 'example@example.example',
+                'label': {
+                    'text': 'Email:',
+                    'class': 'labelVertical flexCentered textCenter'
+                },
+                'required': 'required',
+                'pattern': '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{1,63}$',
+                'title': 'Insert proper email address, example: example@example.example'
+            },
+            {
+                'tag': 'textarea',
+                'name': 'message',
+                'placeholder': 'Your message...',
+                'label': {
+                    'text': 'Your message...',
+                    'class': 'labelVertical flexCentered textCenter'
+                },
+                'required': 'required',
+                'rows': '7'
+            },
+            {
+                'tag': 'input',
+                'type': 'checkbox',
+                'name': 'privacy',
+                'required': 'required',
+                'label': {
+                    'text': 'I accept your offer',
+                    'class': 'labelHorizontal flexCentered textCenter'
+                },
+            },
+        ],
+        'button': {
+            'class': 'siteContactFormSubmit',
+            'text': 'Send'
+        }
+    }
+} %}

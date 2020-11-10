@@ -1,3 +1,5 @@
-<nav id="{{ navID }}">
+{% if ftrMenu %}
+<nav id="siteFtrNav">
     {% include 'partials/nav/partials/list.twig' with {'menu': ftrMenu} %}
 </nav>
+{% endif %}

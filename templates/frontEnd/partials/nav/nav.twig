@@ -1,7 +1,7 @@
-<nav id="{{ navID }}">
-    <div id="{{ navID }}ElementsContainer">
-        <div id="{{ navID }}ButtonsContainer">
-            {% include 'partials/nav/partials/menuButton.twig' %}
+<nav id="siteNav">
+    <div id="siteNavElementsContainer">
+        <div id="siteNavButtonsContainer">
+            {% include 'partials/components/buttons/menuButton.twig' with {'id': 'siteNavExpandButton'} %}
         </div>
         {% include 'partials/nav/partials/list.twig' with {'menu': menu} %}
     </div>

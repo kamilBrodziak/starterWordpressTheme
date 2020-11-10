@@ -1,9 +1,9 @@
 {% if form %}
-    <form action="{{ form.action }}"{% if form.class %} class="{{ form.class }}"{% endif %}>
+    <form method="post" action="{{ form.action }}"{% if form.class %} class="{{ form.class }}"{% endif %}>
         {% for input in form.inputs %}
-            <label{% if input.label.class %} class="{{ input.label.class }}"{% endif %}>
-                {% if input.label %}
-                    <span>{{ input.labelText }}</span>
+            <label class="formInputLabel{% if input.label.class %} {{ input.label.class }}{% endif %}">
+                {% if input.label.text %}
+                    <span>{{ input.label.text }}</span>
                 {% endif %}
                 {% if input.tag == 'input' %}
                     <input type="{{ input.type }}" name="{{ input.name }}"
@@ -16,14 +16,18 @@
                             {% if input.title %} title="{{ input.title }}"{% endif %}
                             {% if input.pattern %} pattern="{{ input.pattern }}"{% endif %}
                             {% if input.value %} value="{{ input.value }}"{% endif %}
+                            {% if input.maxLength %} maxlength="{{ input.maxLength }}"{% endif %}
+                            {% if input.onInvalid %} oninvalid="this.setCustomValidity('{{ input.onInvalid }}')"{% endif %}
+                            {% if input.onInput %} oninput="this.setCustomValidity('{{ input.onInput }}')"{% endif %}
                     >
                 {% elseif input.tag == 'textarea' %}
                     <textarea name="{{ input.name }}"
-                                {% if input.id %} id="{{ input.id }}"{% endif %}
+                            {% if input.id %} id="{{ input.id }}"{% endif %}
                             {% if input.cols %} cols="{{ input.cols }}"{% endif %}
                             {% if input.rows %} rows="{{ input.rows }}"{% endif %}
                             {% if input.placeholder %} placeholder="{{ input.placeholder }}"{% endif %}
                             {% if input.required %} required="required"{% endif %}
+                            {% if input.maxLength %} maxlength="{{ input.maxLength }}"{% endif %}
                     ></textarea>
                 {% endif %}
             </label>
