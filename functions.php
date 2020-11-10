@@ -75,6 +75,7 @@ class StarterSite extends Timber\Site {
 
     public function addToContext( $context ) {
         $context['menu']  = new Timber\Menu('header');
+        $context['ftrMenu'] = new Timber\Menu('footer');
         $context['site']  = $this;
 
         $logoID = get_theme_mod('custom_logo');

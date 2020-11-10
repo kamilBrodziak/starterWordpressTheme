@@ -3,6 +3,6 @@
         <div id="{{ navID }}ButtonsContainer">
             {% include 'partials/nav/partials/menuButton.twig' %}
         </div>
-        {% include 'partials/nav/partials/list.twig' %}
+        {% include 'partials/nav/partials/list.twig' with {'menu': menu} %}
     </div>
 </nav>

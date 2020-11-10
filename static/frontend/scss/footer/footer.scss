@@ -1,0 +1,13 @@
+@import "mobile/layout";
+@import "mobile/contact";
+@import "mobile/contactForm";
+@import "mobile/info";
+@import "mobile/newsletter";
+
+@media all and (min-width: $breakDesktop) {
+    @import "desktop/layout";
+    @import "desktop/contact";
+    @import "desktop/contactForm";
+    @import "desktop/info";
+    @import "desktop/newsletter";
+}

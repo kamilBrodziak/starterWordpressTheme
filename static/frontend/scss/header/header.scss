@@ -1,3 +1,11 @@
-@import "info/info";
-@import "logo/logo";
-@import "newsletter/newsletter";
+@import "mobile/layout";
+@import "mobile/logo";
+@import "mobile/newsletter";
+@import "mobile/info";
+
+@media all and (min-width: $breakDesktop) {
+    @import "desktop/layout";
+    @import "desktop/logo";
+    @import "desktop/newsletter";
+    @import "desktop/info";
+}
