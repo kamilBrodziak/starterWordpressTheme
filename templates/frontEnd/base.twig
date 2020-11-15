@@ -8,11 +8,11 @@
         <div id='siteContainer'>
             {% include 'partials/header/header.twig' %}
             {% include 'partials/nav/nav.twig' %}
-            <main>
+            <section id="siteContent">
                 {% block content %}
                     Sorry, no content
                 {% endblock %}
-            </main>
+            </section>
             {% include 'partials/footer/footer.twig' %}
             {{ function('wp_footer') }}
         </div>

@@ -80,7 +80,15 @@ class StarterSite extends Timber\Site {
 
         $logoID = get_theme_mod('custom_logo');
         if($logoID) {
-            $context['siteLogo'] = getImgObjForTwig($logoID, ['medium', 'mobile', 'medium_large', 'large', 'very_large', 'largest']);
+        	$imgContoller = new \Inc\Controllers\Partials\ImageController($logoID);
+        	$context['siteLogo'] = $imgContoller->withMobile()
+	                                            ->withMedium()
+	                                            ->withMediumLarge()
+	                                            ->withLarge()
+	                                            ->withVeryLarge()
+	                                            ->withLargest()
+	                                            ->getImageRender();
+//            $context['siteLogo'] = getImgObjForTwig($logoID, ['medium', 'mobile', 'medium_large', 'large', 'very_large', 'largest']);
         }
         return $context;
     }
@@ -130,37 +138,7 @@ if(class_exists('Inc\\Init')) {
     Inc\Init::registerServices();
 }
 
-function getImgObjForTwig($imgID, $specificSizes = []) {
-	$logo = [
-		'sizes' => [],
-		'alt' => get_post_meta( $imgID, '_wp_attachment_image_alt', true)
-	];
-	$sizes = wp_get_attachment_metadata($imgID)['sizes'];
-	if(!empty($specificSizes)){
-		$allSizes = $sizes;
-		$sizes = [];
-		foreach($allSizes as $size => $args) {
-			if(in_array($size, $specificSizes)) {
-				$sizes[$size] = $args;
-			}
-		}
-	}
-	uasort($sizes, function ($a, $b) {return $a['width'] - $b['width'];});
-	$sizes['full'] = ['width' => false];
-	$srcSet = [];
-	foreach ($sizes as $size => $args) {
-		$imgAttrs = wp_get_attachment_image_src( $imgID, $size );
-		$srcSet[] = "${imgAttrs[0]} ${imgAttrs[1]}w";
-		$url = wp_get_attachment_image_url( $imgID, $size);
-		$logo['sizes'][$size] = [];
-        $logo['sizes'][$size]['src'] = $url;
-		if($args['width']) {
-			$logo['sizes'][$size]['width'] = "${args['width']}px";
-		}
-	}
-	$logo['srcSet'] = join(",", $srcSet);
-	return $logo;
-}
+include_once __DIR__ . '/inc/helpers/ImageController.php';
 
 //add_filter('wp_generate_attachment_metadata', 'uploadedImgToWebp', 10, 2);
 //function uploadedImgToWebp($metadata, $id) {
