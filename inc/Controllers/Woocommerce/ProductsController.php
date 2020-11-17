@@ -4,6 +4,7 @@ namespace Inc\Controllers\Woocommerce;
 class ProductsController {
 //	private $productsPerPage = 20;
 	private $attrs = [];
+	private $renderVariation = false;
 
 	public function __construct() {
 //		add_filter( 'loop_shop_per_page', [$this, 'productsPerPage'], 20 );
@@ -68,8 +69,19 @@ class ProductsController {
 		return $this;
 	}
 
+	public function withVariationRender() {
+		$this->renderVariation = true;
+		return $this;
+	}
+
 	public function withIDs($ids) {
 		$this->attrs['include'] = $ids;
+		return $this;
+	}
+
+	public function withCategory($categories) {
+		$category = (is_array($categories)) ? $categories : [$categories];
+		$this->attrs['category'] = $category;
 		return $this;
 	}
 
@@ -114,6 +126,9 @@ class ProductsController {
 		$productsDetails = [];
 		foreach ($products as $product) {
 			$product = new ProductController($product);
+			if($this->renderVariation) {
+				$product->withVariationRenderDetails();
+			}
 			$productsDetails[] = $product->getProductRenderDetails();
 		}
 		$this->clear();

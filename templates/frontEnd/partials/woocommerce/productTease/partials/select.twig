@@ -1,0 +1,20 @@
+<div class="customSelectContainer"
+     data-items='{{ select.items }}'
+     data-choose_option_text="{{ select.selected.title }}"
+>
+    {% for option in select.labels %}
+        <div class="customSelect">
+            <span>{{ option.name }}:</span>
+            <div class="customSelectSelected flexCentered">
+                {{ select.selected.title }}
+            </div>
+            <div class="customSelectItemsContainer hide">
+                {% for item in option.items %}
+                    <div class="customSelectItem">
+                        {{ item }}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+</div>

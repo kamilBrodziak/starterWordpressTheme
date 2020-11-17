@@ -73,7 +73,7 @@ class ImageController {
 		$srcSet = [];
 		foreach ($sizes as $size => $args) {
 			$url = wp_get_attachment_image_url( $this->id, $size);
-			$srcSet[] = "${url} ${args['width']}w";
+			$srcSet[] = $args['width'] != false ? "${url} ${args['width']}w" : "${url}";
 			if(!$onlySrcSet) {
 				$logo['sizes'][$size] = [];
 				$logo['sizes'][$size]['src'] = $url;

@@ -4,6 +4,6 @@
             <source{% if img.sizes[size].width %} media="(max-width:{{ img.sizes[size].width }})"{% endif %}
                     srcset="{{ img.sizes[size].src|towebp }}" type="image/webp">
         {% endfor %}
-        <img alt="{{ img.alt }}" srcset="{{ img.srcSet }} src="{{ img.sizes.full.src }}"">
+        <img alt="{{ img.alt }}" srcset="{{ img.srcSet }}" src="{{ img.sizes.full.src }}">
     {% endif %}
 </picture>

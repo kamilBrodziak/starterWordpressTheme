@@ -5,7 +5,54 @@ $( function() {
     // mobileNav.addHeaderFade();
     // let emailFormHandler = new EmailFormHandler($('#ftrContactForm'), "sendUserEmail","ftrContactFormSuccessInfo" );
     // emailFormHandler.submitEvent();
+    $('.customSelectContainer').each((i, el) => {
+        new Select($(el));
+    })
 });
+
+class Select {
+    constructor(container) {
+        this.container = container;
+        this.selects = [];
+        container.find('.customSelect').each((i, el) => {
+            const select = {
+                'id': i,
+                'el': $(el),
+                'selected': false
+            }
+            this.selects.push(select);
+        })
+        this.items = container.data('items');
+        this.chooseOptionText = container.data('choose_option_text');
+        const _this = this;
+        console.log(this.items);
+        this.selects.each((i, el) => {
+            _this.addSelectFunctionality(el);
+        })
+    }
+
+    addSelectFunctionality(select) {
+        const options = [], _this = this;
+        select.find('.customSelectItem').each((i, el) => {
+           options.push($(el));
+        });
+        const optionsContainer = $(select.find('.customSelectItemsContainer'));
+        options.forEach((el) => {
+            el.el.on('click', () => {
+                let allSelected = true;
+                _this.selects.some((el) => {
+                    return !el.selected;
+                });
+
+                if(allSelected) {
+                    let
+                }
+            })
+        })
+    }
+
+}
+
 
 class EmailFormHandler {
     constructor(form, phpHandlerFuncName, successInfoId) {

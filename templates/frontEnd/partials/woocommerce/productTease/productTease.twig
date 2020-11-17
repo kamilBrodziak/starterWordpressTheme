@@ -1,0 +1,16 @@
+<article class="productTease">
+    <header class="productTeaseHeader">
+        <a class="productTeaseAnchor" href="{{ product.url.productPage }}">
+            {% include 'partials/components/pictures/pictureWithThemeWebp.twig' with {'img': product.img } %}
+            {% include 'partials/woocommerce/productTease/partials/title.twig' %}
+        </a>
+    </header>
+    <main class="productTeaseMain">
+        <div class="productTeasePriceContainer textCenter">
+            {% include 'partials/woocommerce/productTease/partials/price.twig' with {'prices': product.prices } %}
+        </div>
+    </main>
+    <footer class="productTeaseFooter">
+        {% include 'partials/woocommerce/productTease/partials/form.twig' %}
+    </footer>
+</article>

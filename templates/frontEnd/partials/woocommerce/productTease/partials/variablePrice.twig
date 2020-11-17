@@ -1,0 +1,8 @@
+<span class="productTeaseOldPrice">
+    {{ prices.minRegular }}{% if prices.maxRegular %} - {{ prices.maxRegular }}{% endif %}
+</span>
+{% if prices.minSale %}
+    <span class="productTeaseNewPrice">
+        {{ prices.minSale }}{% if prices.maxSale %} - {{ prices.maxSale }}{% endif %}
+    </span>
+{% endif %}

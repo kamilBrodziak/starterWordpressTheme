@@ -54,7 +54,7 @@ class StarterSite extends Timber\Site {
         remove_action( 'wp_head', 'wlwmanifest_link');
         remove_action('wp_head', 'rest_output_link_wp_head', 10);
         remove_action('wp_head', 'wp_oembed_add_discovery_links', 10);
-        remove_action('template_redirect', 'rest_output_link_header', 11, 0);
+        remove_action('template_redirect', 'rest_output_link_header', 11);
     }
 
 	public function adjustImgSizes() {
@@ -88,7 +88,6 @@ class StarterSite extends Timber\Site {
 	                                            ->withVeryLarge()
 	                                            ->withLargest()
 	                                            ->getImageRender();
-//            $context['siteLogo'] = getImgObjForTwig($logoID, ['medium', 'mobile', 'medium_large', 'large', 'very_large', 'largest']);
         }
         return $context;
     }
@@ -138,7 +137,9 @@ if(class_exists('Inc\\Init')) {
     Inc\Init::registerServices();
 }
 
-include_once __DIR__ . '/inc/helpers/ImageController.php';
+include_once __DIR__ . '/inc/Controllers/Partials/ImageController.php';
+include_once __DIR__ . '/inc/Controllers/Woocommerce/ProductController.php';
+include_once __DIR__ . '/inc/Controllers/Woocommerce/ProductsController.php';
 
 //add_filter('wp_generate_attachment_metadata', 'uploadedImgToWebp', 10, 2);
 //function uploadedImgToWebp($metadata, $id) {
@@ -176,67 +177,3 @@ function deleteImgWebp($id) {
 		}
 	}
 }
-
-
-
-/**
- * WOOCOMMERCE
- **/
-
-
-
-function timber_set_product( $post ) {
-	global $product;
-
-	if ( is_woocommerce() ) {
-		$product = wc_get_product( $post->ID );
-	}
-}
-
-add_filter('add_to_cart_redirect', 'addToCartRedirectToCheckout');
-function addToCartRedirectToCheckout() {
-	global $woocommerce;
-	return $woocommerce->cart->get_checkout_url();
-}
-
-add_filter( 'woocommerce_add_to_cart_validation', 'remove_cart_item_before_add_to_cart', 20, 3 );
-function remove_cart_item_before_add_to_cart( $passed, $product_id, $quantity ) {
-	if( ! WC()->cart->is_empty() )
-		WC()->cart->empty_cart();
-	return $passed;
-}
-
-add_filter( 'woocommerce_dropdown_variation_attribute_options_args', 'wc_remove_options_text');
-function wc_remove_options_text( $args ){
-	$args['show_option_none'] = '';
-	return $args;
-}
-
-
-function isSimpleProduct($id) {
-	return wc_get_product($id)->is_type('simple');
-}
-
-
-add_filter( 'woocommerce_product_single_add_to_cart_text', 'woocommerce_custom_single_add_to_cart_text' );
-function woocommerce_custom_single_add_to_cart_text() {
-	return __( 'Kup teraz', 'woocommerce' );
-}
-
-
-add_filter('woocommerce_billing_fields','wpb_custom_billing_fields');
-function wpb_custom_billing_fields( $fields = array() ) {
-	unset($fields['billing_company']);
-	return $fields;
-}
-
-
-function getWCProducts() {
-	return Timber::get_posts( [
-		'post_type'      => 'product',
-		'orderby' => [
-			'date' => 'ASC'
-		]
-   ] );
-}
-

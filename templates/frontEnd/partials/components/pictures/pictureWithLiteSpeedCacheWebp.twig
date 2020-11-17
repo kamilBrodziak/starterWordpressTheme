@@ -1,0 +1,9 @@
+<picture class="imgContainer flexCentered">
+    {% if img %}
+        {% for size in img.sizes %}
+            <source{% if size.width %} media="(max-width:{{ size.width }})"{% endif %}
+                    srcset="{{ size.src }}.webp" type="image/webp">
+        {% endfor %}
+        <img alt="{{ img.alt }}" srcset="{{ img.srcSet }}" src="{{ img.sizes.full.src }}">
+    {% endif %}
+</picture>

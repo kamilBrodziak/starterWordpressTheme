@@ -1,0 +1,5 @@
+{% if product.type == 'variable' %}
+    {% include 'partials/woocommerce/productTease/partials/variablePrice.twig' with {'prices': product.prices} %}
+{% elseif product.type == 'simple' %}
+    {% include 'partials/woocommerce/productTease/partials/simplePrice.twig' with {'prices': product.prices} %}
+{% endif %}

@@ -9,8 +9,8 @@
             {{post.content}}
             {% block products %}
                 <div id='productList'>
-                    {% for post in products %}
-                        {% include ['partials/tease-product.twig'] %}
+                    {% for product in products %}
+                        {% include ['partials/woocommerce/productTease/productTease.twig'] %}
                     {% endfor %}
                 </div>
             {% endblock %}

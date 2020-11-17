@@ -1,5 +1,15 @@
 {% extends 'base.twig' %}
 {% block content %}
-    <article id='frontPageArticle'>
+{#    <article id='frontPageArticle'>#}
+{#    </article>#}
+    <article id='pageArticle'>
+        <header id='pageHeader'>
+            <h1 id='pageTitle' class='textCenter flexCentered'>{{post.title}}</h1>
+        </header>
+        <section id='pageContent'>
+            {% block pageContent %}
+                {{post.content}}
+            {% endblock %}
+        </section>
     </article>
 {% endblock %}

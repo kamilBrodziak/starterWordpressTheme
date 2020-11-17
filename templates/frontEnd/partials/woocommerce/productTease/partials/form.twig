@@ -1,0 +1,31 @@
+{% set quantity = product.stock.quantity ? product.stock.quantity : 999 %}
+{% include 'partials/components/forms/form.twig' with {
+    'form': {
+        'action': '',
+        'class': 'productTeaseForm',
+        'inputs': [
+            {
+                'tag': 'input',
+                'type': 'number',
+                'name': 'quantity',
+                'min': 1,
+                'max': quantity,
+                'value': 1,
+                'label': {
+                    'text': 'Quantity:',
+                    'class': 'labelHorizontal flexCentered textCenter'
+                },
+                'required': 'required',
+            },
+            {
+                'tag': 'select',
+                'path': 'partials/woocommerce/productTease/partials/select.twig',
+                'data': product.variations
+            }
+        ],
+        'button': {
+            'class': 'siteContactFormSubmit',
+            'text': 'Send'
+        }
+    }
+} %}
