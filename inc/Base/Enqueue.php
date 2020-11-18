@@ -50,9 +50,13 @@ class Enqueue extends BaseController {
             wp_enqueue_script('jquery');
         }
 	    wp_enqueue_script('jquery');
+        wp_register_script('siteJS', get_template_directory_uri() . '/static/frontend/js/site.js', ['jquery'], null, true);
+	    wp_localize_script( 'siteJS', 'ajaxWoocommerce', array(
+		    'ajaxUrl' => admin_url('admin-ajax.php'),
+	    ) );
+	    wp_enqueue_script( 'siteJS');
 
-	    wp_enqueue_script( 'siteJS', get_template_directory_uri() . '/static/frontend/js/site.js', array('jquery'), null, true );
-        wp_enqueue_style('siteStyle', get_template_directory_uri() . '/static/frontend/css/style.css', null, null, null);
+	    wp_enqueue_style('siteStyle', get_template_directory_uri() . '/static/frontend/css/style.css', null, null, null);
         wp_dequeue_style( 'wp-block-library' );
         wp_dequeue_style( 'wp-block-library-theme' );
     }

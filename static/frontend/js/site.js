@@ -8,10 +8,22 @@ $( function() {
     $('.productTease').each((i, el) => {
         new ProductTease($(el), '');
     })
+
 });
 
+function ajaxCall(data) {
+    jQuery.ajax({
+        url: ajaxWoocommerce.ajaxUrl,
+        type: 'POST',
+        data: data.data,
+        beforeSend: data.beforeSend,
+        error: data.error,
+        success: data.success
+    });
+}
+
 class ProductTease {
-    constructor(el, cart) {
+    constructor(el, cart, items = null) {
         this.el = el;
         this.cart = cart;
         this.img = el.find('.imgContainer img');
@@ -59,7 +71,8 @@ class ProductTease {
                 }
                 _this.selects.push(selectObj);
             });
-            this.variations = this.selectsContainer.data('items');
+
+            this.variations = (items) ? items : this.selectsContainer.data('items');
             this.chooseOptionText = this.selectsContainer.data('choose_option_text');
             this.addSelectFunctionality();
         }

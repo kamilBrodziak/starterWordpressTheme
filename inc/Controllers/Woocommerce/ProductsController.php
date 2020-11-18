@@ -1,24 +1,20 @@
 <?php
 namespace Inc\Controllers\Woocommerce;
 
+use Inc\Controllers\Woocommerce\Products\SimpleProductController;
+use Inc\Controllers\Woocommerce\Products\VariableProductController;
+
 class ProductsController {
 //	private $productsPerPage = 20;
 	private $attrs = [];
 	private $renderVariation = false;
+	private $products = [];
+
 
 	public function __construct() {
 //		add_filter( 'loop_shop_per_page', [$this, 'productsPerPage'], 20 );
 //		add_action( 'pre_get_posts', [$this, 'customQueryPostsPerPage'] );
 	}
-
-//	function customQueryPostsPerPage( $query ) {
-//		if ( $query->is_main_query() && !is_admin() ) {
-//			$query->set( 'posts_per_page', $this->productsPerPage());
-//		}
-//	}
-//	function productsPerPage( $cols = 0 ) {
-//		return $this->productsPerPage;
-//	}
 
 	public function search($search) {
 		$this->attrs['s'] = $search;
@@ -31,7 +27,6 @@ class ProductsController {
 		} else {
 			$this->attrs['category'] = [$category];
 		}
-		return $this;
 	}
 
 	public function limit($limit) {
@@ -124,14 +119,29 @@ class ProductsController {
 	public function getProducts() {
 		$products = wc_get_products($this->attrs);
 		$productsDetails = [];
+		$this->products = [];
 		foreach ($products as $product) {
-			$product = new ProductController($product);
-			if($this->renderVariation) {
-				$product->withVariationRenderDetails();
+			$productController = self::getProductController($product);
+			$this->products[] = $product;
+			if($this->renderVariation && $productController->isVariable()) {
+				$productController->withVariations();
 			}
-			$productsDetails[] = $product->getProductRenderDetails();
+			$productsDetails[] = $productController->getRenderDetails();
 		}
 		$this->clear();
 		return $productsDetails;
+	}
+
+	public static function getProductController($idOrProduct) {
+		$product = $idOrProduct;
+		if(is_int($idOrProduct)) {
+			$product = wc_get_product($idOrProduct);
+		}
+
+		if($product) {
+			if($product->is_type('simple')) return new SimpleProductController($product);
+			if($product->is_type('variable')) return new VariableProductController($product);
+		}
+		return null;
 	}
 }

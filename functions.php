@@ -138,9 +138,11 @@ if(class_exists('Inc\\Init')) {
 }
 
 include_once __DIR__ . '/inc/Controllers/Partials/ImageController.php';
-include_once __DIR__ . '/inc/Controllers/Woocommerce/ProductController.php';
-include_once __DIR__ . '/inc/Controllers/Woocommerce/ProductsController.php';
 
+include_once __DIR__ . '/inc/Controllers/Woocommerce/ProductsController.php';
+include_once __DIR__ . '/inc/Controllers/Woocommerce/ProductsController.php';
+include_once __DIR__ . '/inc/Controllers/Woocommerce/ProductsController.php';
+include_once get_template_directory() . '/inc/Controllers/Woocommerce/Ajax.php';
 //add_filter('wp_generate_attachment_metadata', 'uploadedImgToWebp', 10, 2);
 //function uploadedImgToWebp($metadata, $id) {
 //    if(wp_attachment_is_image($id)) {
