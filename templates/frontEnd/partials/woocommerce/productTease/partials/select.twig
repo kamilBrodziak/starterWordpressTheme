@@ -1,20 +1,22 @@
-<div class="customSelectContainer"
-     data-items='{{ select.items }}'
-     data-choose_option_text="{{ select.selected.title }}"
->
-    {% for option in select.labels %}
-        <div class="customSelect">
-            <span>{{ option.name }}:</span>
-            <div class="customSelectSelected flexCentered">
-                {{ select.selected.title }}
+{% if select %}
+    <div class="customSelectContainer"
+         data-items='{{ select.items }}'
+         data-choose_option_text="{{ select.selected.title }}"
+    >
+        {% set ind = 0 %}
+        {% for option in select.labels %}
+            <div class="customSelect{% if ind != 0 %} disabled{% endif %}">
+                <span>{{ option.name }}:</span>
+                <div class="customSelectSelected flexCentered">
+                    {{ select.selected.title }}
+                </div>
+                <div class="customSelectItemsContainer hide">
+                    {% for item in option.items %}
+                        <div class="customSelectItem">{{ item }}</div>
+                    {% endfor %}
+                </div>
             </div>
-            <div class="customSelectItemsContainer hide">
-                {% for item in option.items %}
-                    <div class="customSelectItem">
-                        {{ item }}
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-    {% endfor %}
-</div>
+            {% set ind = ind + 1 %}
+        {% endfor %}
+    </div>
+{% endif %}

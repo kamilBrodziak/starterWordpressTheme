@@ -5,10 +5,234 @@ $( function() {
     // mobileNav.addHeaderFade();
     // let emailFormHandler = new EmailFormHandler($('#ftrContactForm'), "sendUserEmail","ftrContactFormSuccessInfo" );
     // emailFormHandler.submitEvent();
-    $('.customSelectContainer').each((i, el) => {
-        new Select($(el));
+    $('.productTease').each((i, el) => {
+        new ProductTease($(el), '');
     })
 });
+
+class ProductTease {
+    constructor(el, cart) {
+        this.el = el;
+        this.cart = cart;
+        this.img = el.find('.imgContainer img');
+        this.priceContainer = el.find('.productTeasePriceContainer');
+        this.form = el.find('.productTeaseForm');
+        this.readyForSubmit = true;
+        this.productID = this.el.data('id');
+        this.formButton = this.form.find('.productTeaseFormSubmit');
+        this.type = this.el.data('type');
+        const quantity = this.form.find('.productTeaseQuantity');
+        this.quantityInput = quantity.length ? quantity : null;
+        if(this.type === 'variable') {
+            const _this = this;
+            this.defaults = {
+                price: this.priceContainer.html(),
+                imgSrc: this.img.attr('src'),
+                sources: [],
+
+            }
+            this.el.find('.imgContainer source').each((i, el) => {
+                const source = $(el);
+                _this.defaults.sources.push([source, source.attr('srcset')])
+            })
+            this.variationID = null;
+            this.selectsContainer = this.form.find('.customSelectContainer');
+            this.selects = [];
+            this.readyForSubmit = false;
+            this.selectsContainer.find('.customSelect').each((i, el) => {
+                const select = $(el);
+                const selectObj = {
+                    isSelected: false,
+                    disabled: i !== 0,
+                    ind: i,
+                    el: select,
+                    itemsContainer: select.find('.customSelectItemsContainer'),
+                    selected: select.find('.customSelectSelected')
+                };
+                if(i === 0) {
+                    selectObj.items = [];
+                    selectObj.itemsContainer.find('.customSelectItem').each((i, el) => {
+                        selectObj.items.push($(el));
+                    })
+                } else {
+                    _this.disableSelect(selectObj);
+                }
+                _this.selects.push(selectObj);
+            });
+            this.variations = this.selectsContainer.data('items');
+            this.chooseOptionText = this.selectsContainer.data('choose_option_text');
+            this.addSelectFunctionality();
+        }
+        this.addForm();
+    }
+
+    addSelectFunctionality() {
+        const _this = this;
+        const hideClass = 'hide';
+        this.selects.forEach((el, i) => {
+            const select = el.el;
+            const itemsContainer = el.itemsContainer;
+            select.on('click', () => {
+                const isClosed = itemsContainer.hasClass(hideClass);
+                if(!el.disabled) {
+                    if(isClosed) {
+                        _this.showSelect(itemsContainer, hideClass);
+                    } else {
+                        _this.hideSelect(itemsContainer, hideClass);
+                    }
+                }
+            });
+
+            if(i === 0) {
+                _this.addSelectItemsFunctionality(el);
+            }
+        })
+    }
+
+    enableSelect(select) {
+        select.el.removeClass('disabled');
+        select.disabled = false;
+    }
+
+    disableSelect(select) {
+        const _this = this;
+        const itemsContainer = select.itemsContainer;
+        const selected = select.selected;
+        select.disabled = true;
+        itemsContainer.empty();
+        selected.html(_this.chooseOptionText);
+        select.el.addClass('disabled');
+    }
+
+    addSelectItemsFunctionality(select) {
+        const items = select.items;
+        const _this = this;
+        const selected = select.selected;
+        items.forEach((el, i) => {
+            el.on('click', () => {
+                selected.html(el.text());
+                let variations = _this.variations;
+                for(let i = 0; i <= select.ind; ++i) {
+                    const selectedText = _this.selects[i].selected.text().replaceAll(' ', '_');
+                    variations = variations[selectedText];
+                }
+                if(select.ind !== _this.selects.length - 1) {
+                    const items = Object.keys(variations);
+                    const nextSelect = _this.selects[select.ind + 1];
+                    for(let i = select.ind + 1; i < _this.selects.length; ++i) {
+                        _this.disableSelect(_this.selects[i]);
+                    }
+                    _this.generateSelectItems(nextSelect, items);
+                    _this.enableSelect(nextSelect);
+                    _this.addSelectItemsFunctionality(nextSelect);
+                    _this.disableForm();
+                } else {
+                    _this.enableForm(variations);
+                }
+
+            })
+        })
+    }
+
+    generateSelectItems(select, items) {
+        const selectItemsContainer = select.itemsContainer;
+        selectItemsContainer.empty();
+        select.items = [];
+        items.forEach((el, i) => {
+            const div = $('<div class="customSelectItem" />');
+            div.html(el.replaceAll('_', ' '));
+            select.items.push(div);
+            selectItemsContainer.append(div);
+        })
+    }
+
+    enableForm(variation) {
+        if(this.type === 'variable') {
+            if(this.img.attr('src') !== variation.img.src) {
+                this.defaults.sources.forEach((el, i) => {
+                    el[0].attr('srcset', '');
+                });
+                this.img.attr('src', variation.img.src);
+                this.img.attr('srcset', variation.img.src);
+            }
+            const regularPrice = $('<span class="productTeaseOldPrice"/>')
+            regularPrice.html(variation.prices.regular);
+            this.priceContainer.empty();
+            this.priceContainer.append(regularPrice);
+            if(variation.prices.sale) {
+                const salePrice = $('<span class="productTeaseNewPrice" />');
+                salePrice.html(variation.prices.sale)
+                this.priceContainer.append(salePrice);
+            }
+            this.quantityInput.val(1);
+
+            if(variation.stock.backorders && variation.stock.backorders === false && variation.stock.quantity) {
+                this.quantityInput.attr('max', variation.stock.quantity)
+            }
+            this.form.attr('action', variation.url.addToCart + "&quantity=" + this.quantityInput.val());
+        }
+        this.formButton.attr('disabled', false);
+    }
+
+    disableForm() {
+        const _this = this;
+        if(this.type === 'variable') {
+            this.defaults.sources.forEach((el, i) => {
+                el[0].attr('srcset', el[1]);
+            });
+            this.img.attr('src', this.defaults.imgSrc);
+            this.form.attr('action', '');
+        }
+        this.priceContainer.html(this.defaults.price);
+        this.formButton.attr('disabled', true);
+    }
+
+    showSelect(el, hideClass) {
+        el.removeClass(hideClass);
+    }
+
+    hideSelect(el, hideClass) {
+        el.addClass(hideClass);
+    }
+
+    addForm() {
+        const _this = this;
+        this.form.on('submit', (e) => {
+            e.preventDefault();
+            const ajax = {
+                data: {
+                    productID: _this.productID,
+                    quantity: (_this.quantityInput) ? _this.quantityInput.val() : 1,
+                    action: 'addProductToCart'
+                },
+                beforeSend: () => {
+                    _this.el.addClass('loadingScreen');
+                },
+                error: (response) => {
+                    console.log(response);
+                    _this.el.removeClass('loadingScreen');
+                },
+                success: (response) => {
+                    _this.el.removeClass('loadingScreen');
+                    let resultClass = response === 'false' ? 'errorScreen' : 'successScreen';
+                    if(response === 'false') {
+                        console.log('Error occured');
+                    } else {
+                        _this.cart.html(response);
+                    }
+                    _this.el.addClass(resultClass);
+                    window.setTimeout(() => {
+                        _this.el.removeClass(resultClass);
+                    }, 2000)
+                }
+            }
+
+            if(_this.type === 'variable') {
+                ajax.data.variationID = _this.variationID;
+            }
+        })
+    }
+}
 
 class Select {
     constructor(container) {
@@ -45,7 +269,6 @@ class Select {
                 });
 
                 if(allSelected) {
-                    let
                 }
             })
         })

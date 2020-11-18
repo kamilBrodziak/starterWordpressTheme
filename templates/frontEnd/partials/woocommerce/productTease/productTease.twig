@@ -1,4 +1,4 @@
-<article class="productTease">
+<article class="productTease" data-id="{{ product.id }}" data-type="{{ product.type }}">
     <header class="productTeaseHeader">
         <a class="productTeaseAnchor" href="{{ product.url.productPage }}">
             {% include 'partials/components/pictures/pictureWithThemeWebp.twig' with {'img': product.img } %}

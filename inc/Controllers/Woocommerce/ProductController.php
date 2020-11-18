@@ -32,7 +32,7 @@ class ProductController {
 			'id' => $product->get_id(),
 			'title' => $product->get_name(),
 			'prices' => [
-				'regular' => $product->get_regular_price()
+				'regular' => wc_price($product->get_regular_price())
 			],
 			'img' => !$isVariation ? $imageController->withProductTease()->getImageRender() :
 				$imageController->getImageFullSrc(),
@@ -45,7 +45,7 @@ class ProductController {
 			$details['url']['productPage'] = get_permalink($product->get_id());
 		}
 		if($product->is_on_sale()) {
-			$details['prices']['sale'] = $product->get_sale_price();
+			$details['prices']['sale'] = wc_price($product->get_sale_price());
 		}
 
 		return $details;
@@ -82,31 +82,31 @@ class ProductController {
 		return $details;
 	}
 
-	private function getVariableProductRenderDetails() {
+	private function withVariableMinMaxPrices(&$details) {
 		$product = $this->product;
-		$details = $this->getBasicProductRenderDetails($product);
-		$this->withGallery($details);
 		$minRegular = $product->get_variation_regular_price('min', true);
-		$details['prices']['minRegular'] = $minRegular;
+		$details['prices']['minRegular'] = wc_price($minRegular);
 		$maxRegular = $product->get_variation_regular_price('max', true);
 		if($minRegular != $maxRegular) {
-			$details['prices']['maxRegular'] = $maxRegular;
+			$details['prices']['maxRegular'] = wc_price($maxRegular);
 		}
 		$minSale = $product->get_variation_sale_price('min', true);
 		$maxSale = $product->get_variation_sale_price('max', true);
 		if($minSale != $minRegular || $maxSale != $maxRegular) {
-			$details['prices']['minSale'] = $minSale;
+			$details['prices']['minSale'] = wc_price($minSale);
 			if($minSale != $maxSale) {
-				$details['prices']['maxSale'] = $maxSale;
+				$details['prices']['maxSale'] = wc_price($maxSale);
 			}
 		}
+	}
 
+	private function withVariableAttributeLabels(&$details) {
+		$product = $this->product;
 		$details['variations'] = [
 			'selected' => [
-				'title' => 'test2'
+				'title' => 'Choose option'
 			],
-			'labels' => [],
-			'items' => []
+			'labels' => []
 		];
 		foreach ($product->get_variation_attributes() as $name => $arr) {
 			$details['variations']['labels'][] = [
@@ -114,33 +114,46 @@ class ProductController {
 				'items' => $arr
 			];
 		}
-		if($this->variationRender) {
-			$variations = [];
-			$combinations = [];
-			foreach ($product->get_available_variations('objects') as $variation) {
-				$variationAttrs = $variation->get_variation_attributes();
-				$variationDetails = $this->getBasicProductRenderDetails($variation,true);
-				$this->withStock($variation, $variationDetails);
-				$combination = [];
-				$index = 0;
-				foreach (array_reverse($variationAttrs) as $key => $value) {
-					$attrName = strtolower(str_replace(' ', '_', $value));
-					if($index == 0) {
-						$combination[$attrName] = $variationDetails;
-					} elseif ($index > 0 ) {
-						$temp = $combination;
-						$combination = [];
-						$combination[$attrName] = $temp;
-					}
-					$index++;
+	}
+
+	private function withVariableVariations(&$details) {
+		$product = $this->product;
+		$this->withVariableAttributeLabels($details);
+		$variations = [];
+		$combinations = [];
+		foreach ($product->get_available_variations('objects') as $variation) {
+			$variationAttrs = $variation->get_variation_attributes();
+			$variationDetails = $this->getBasicProductRenderDetails($variation,true);
+			$this->withStock($variation, $variationDetails);
+			$combination = [];
+			$index = 0;
+			foreach (array_reverse($variationAttrs) as $key => $value) {
+				$attrName = str_replace(' ', '_', $value);
+				if($index == 0) {
+					$combination[$attrName] = $variationDetails;
+				} elseif ($index > 0 ) {
+					$temp = $combination;
+					$combination = [];
+					$combination[$attrName] = $temp;
 				}
-				$combinations = array_merge_recursive($combinations, $combination);
-				$variations[] = $variationDetails;
+				$index++;
 			}
-			$details['variations']['items'] = json_encode($combinations);
+			$combinations = array_merge_recursive($combinations, $combination);
+			$variations[] = $variationDetails;
 		}
+		$details['variations']['items'] = json_encode($combinations);
+	}
 
+	private function getVariableProductRenderDetails() {
+		$product = $this->product;
+		$details = $this->getBasicProductRenderDetails($product);
+		$this->withGallery($details);
+		$this->withVariableMinMaxPrices($details);
+		$details['variations'] = [];
 
+		if($this->variationRender) {
+			$this->withVariableVariations($details);
+		}
 		return $details;
 	}
 

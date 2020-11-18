@@ -34,7 +34,11 @@
                 {% endif %}
             </label>
         {% endfor %}
-        <button type="submit" class="{{ form.button.class }}">
+        <button type="submit" class="{{ form.button.class }}"
+            {% if form.button.disabled and form.button.disabled == "true" %}
+                disabled
+            {% endif %}
+        >
             {% if form.button.text %}{{ form.button.text }}{% endif %}
         </button>
     </form>

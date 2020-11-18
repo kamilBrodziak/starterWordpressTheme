@@ -61,6 +61,14 @@
   max-height: 100%;
 }
 
+.hide {
+  display: none;
+}
+
+.disabled {
+  background: yellow;
+}
+
 .borderRadiusTen {
   border-radius: 10px;
 }
