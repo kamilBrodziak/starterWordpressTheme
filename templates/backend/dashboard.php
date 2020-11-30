@@ -1,5 +1,6 @@
 <div class="wrap">
     <h1>Dashboard</h1>
+    <button id="kbCreateDatabase" type="submit">Create products tables</button>
 	<?php settings_errors(); ?>
 
     <form method="post" action="options.php">

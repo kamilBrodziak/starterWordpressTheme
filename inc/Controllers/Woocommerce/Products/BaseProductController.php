@@ -2,6 +2,7 @@
 namespace Inc\Controllers\Woocommerce\Products;
 
 use Inc\Controllers\Partials\ImageController;
+use Inc\Controllers\Woocommerce\Tools;
 
 abstract class BaseProductController {
 	protected $product;
@@ -17,7 +18,7 @@ abstract class BaseProductController {
 			'id' => $product->get_id(),
 			'title' => $product->get_name(),
 			'prices' => [
-				'regular' => wc_price($product->get_regular_price())
+				'regular' => Tools::formatPrice($product->get_regular_price())
 			],
 			'img' => !$isVariation ? $imageController->withProductTease()->getImageRender() :
 				$imageController->getImageFullSrc(),
@@ -30,9 +31,8 @@ abstract class BaseProductController {
 			$details['url']['productPage'] = get_permalink($product->get_id());
 		}
 		if($product->is_on_sale()) {
-			$details['prices']['sale'] = wc_price($product->get_sale_price());
+			$details['prices']['sale'] = Tools::formatPrice($product->get_sale_price());
 		}
-
 		return $details;
 	}
 	protected function withGallery() {
@@ -65,7 +65,7 @@ abstract class BaseProductController {
 			$details['stock']['quantity'] = $product->get_stock_quantity();
 			$backordersAllowed = $product->backorders_allowed();
 			if($backordersAllowed) {
-				$details['stock']['backorders'] = $product->backorders_allowed();
+				$details['stock']['backorders'] = $backordersAllowed;
 				$details['stock']['notify'] = $product->backorders_require_notification();
 			}
 		}

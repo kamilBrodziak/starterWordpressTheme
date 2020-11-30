@@ -18,6 +18,12 @@ class Enqueue extends BaseController {
 
 
     function enqueueAdmin($hook) {
+	    wp_register_script('kbAdminJS',
+		    get_template_directory_uri() . '/static/backend/js/admin.js', ['jquery'], null, true);
+	    wp_localize_script( 'kbAdminJS', 'ajaxBackend', array(
+		    'ajaxUrl' => admin_url('admin-ajax.php'),
+	    ) );
+	    wp_enqueue_script('kbAdminJS');
 //        if('themeNameDashboard' == $hook) {
 //            wp_enqueue_media();
 //            wp_enqueue_style('kBPaStyle', $this->pluginUrl. 'assets/css/aStyle.css');
@@ -47,7 +53,6 @@ class Enqueue extends BaseController {
         if(!is_product() && !is_checkout()) {
             wp_deregister_script('woocommerce');
             wp_deregister_script('wc-cart-fragments');
-            wp_enqueue_script('jquery');
         }
 	    wp_enqueue_script('jquery');
         wp_register_script('siteJS', get_template_directory_uri() . '/static/frontend/js/site.js', ['jquery'], null, true);

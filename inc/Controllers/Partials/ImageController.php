@@ -53,7 +53,7 @@ class ImageController {
 	}
 
 	public function getImageFullSrc() {
-		return ['src' => wp_get_attachment_image_url( $this->id, 'full')];
+		return ['src' => wp_get_attachment_url($this->id)];
 	}
 
 	public function getImageRender($onlySrcSet = false) {
@@ -61,28 +61,38 @@ class ImageController {
 			'sizes' => [],
 			'alt' => get_post_meta( $this->id, '_wp_attachment_image_alt', true)
 		];
-		$allSizes = wp_get_attachment_metadata($this->id)['sizes'];
-		$sizes = [];
-		foreach ($allSizes as $size => $args) {
-			if(in_array($size, $this->imageSizes)) {
-				$sizes[$size] = $args;
+		$attachment = wp_get_attachment_metadata($this->id);
+		$isArray = is_array($attachment);
+		$sizes = $isArray ? $attachment['sizes'] : [];
+		$sizesEmpty = empty($sizes);
+		$srcSet = "";
+		$imgUrl = wp_get_attachment_url($this->id);
+		$ind = 0;
+		if(!$sizesEmpty) {
+			uasort($sizes, function ($a, $b) {return $a['width'] - $b['width'];});
+			foreach ($sizes as $size => $args) {
+				if(!in_array($size, $this->imageSizes)) {
+					unset($sizes[$size]);
+				}
 			}
-		}
-		uasort($sizes, function ($a, $b) {return $a['width'] - $b['width'];});
-		$sizes['full'] = ['width' => false];
-		$srcSet = [];
-		foreach ($sizes as $size => $args) {
-			$url = wp_get_attachment_image_url( $this->id, $size);
-			$srcSet[] = $args['width'] != false ? "${url} ${args['width']}w" : "${url}";
-			if(!$onlySrcSet) {
-				$logo['sizes'][$size] = [];
-				$logo['sizes'][$size]['src'] = $url;
-				if($args['width']) {
-					$logo['sizes'][$size]['width'] = "${args['width']}px";
+			$baseName = wp_basename( $imgUrl );
+			$baseUrl = str_replace($baseName, '', $imgUrl);
+			foreach($sizes as $size => $args) {
+				$url = "${baseUrl}${args['file']}";
+				$srcSet .= (($ind++ > 0) ? ',' : '') . "${url} ${args['width']}w";
+				if(!$onlySrcSet) {
+					$logo['sizes'][$size] = ['src' => $url];
+					if($args['width']) {
+						$logo['sizes'][$size]['width'] = "${args['width']}px";
+					}
 				}
 			}
 		}
-		$logo['srcSet'] = join(",", $srcSet);
+		$srcSet .= (($ind > 0) ? ',' : '') . "${imgUrl}";
+		if(!$onlySrcSet) {
+			$logo['sizes']['full'] = ['src' => $imgUrl];
+		}
+		$logo['srcSet'] = $srcSet;
 		$this->clear();
 		return $logo;
 	}

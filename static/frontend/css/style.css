@@ -120,12 +120,13 @@ html {
     font-size: 10px;
   }
 }
-input[type=submit] {
-  cursor: pointer;
-}
-
 * {
   font-size: 2rem;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 /*# sourceMappingURL=style.css.map */

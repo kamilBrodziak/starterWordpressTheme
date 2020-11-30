@@ -3,13 +3,12 @@ namespace Inc\Controllers\Woocommerce;
 
 use Inc\Controllers\Woocommerce\Products\SimpleProductController;
 use Inc\Controllers\Woocommerce\Products\VariableProductController;
+use Inc\DAO\Products\ProductsDAO;
 
 class ProductsController {
-//	private $productsPerPage = 20;
 	private $attrs = [];
 	private $renderVariation = false;
 	private $products = [];
-
 
 	public function __construct() {
 //		add_filter( 'loop_shop_per_page', [$this, 'productsPerPage'], 20 );
@@ -110,26 +109,38 @@ class ProductsController {
 		return $this;
 	}
 
-	public function clear() {
-		$this->attrs = [
-			'status' => 'publish'
-		];
+	public function publishOnly() {
+		$this->attrs['status'] = 'publish';
+		return $this;
 	}
 
-	public function getProducts() {
-		$products = wc_get_products($this->attrs);
+	public function clear() {
+		$this->attrs = [];
+	}
+
+	public function getProducts($products = null) {
+		if(is_null($products)) {
+			$products = wc_get_products($this->attrs);
+		}
 		$productsDetails = [];
 		$this->products = [];
 		foreach ($products as $product) {
-			$productController = self::getProductController($product);
+			$productController = $this->getProductController($product);
 			$this->products[] = $product;
 			if($this->renderVariation && $productController->isVariable()) {
 				$productController->withVariations();
 			}
 			$productsDetails[] = $productController->getRenderDetails();
+//			}
 		}
 		$this->clear();
 		return $productsDetails;
+
+	}
+
+	public function getProductsFromKBDB() {
+		$products = ProductsDAO::getProducts($this->attrs);
+		return $this->getProducts($products);
 	}
 
 	public static function getProductController($idOrProduct) {

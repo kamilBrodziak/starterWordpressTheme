@@ -2,6 +2,8 @@
 
 namespace Inc\Base;
 
+use Inc\Controllers\Woocommerce\ProductsTransients;
+
 class WooCommerceSettings {
 
     public function register() {
@@ -24,5 +26,44 @@ class WooCommerceSettings {
         remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_sharing', 50);
         remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_price', 10 );
         add_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_price', 21 );
+//	    add_action( 'woocommerce_product_query', [$this, 'react2wp_hide_products_without_price'] );
+//	    add_action( 'woocommerce_update_product', [$this, 'updateProductTransientAction'] );
+//	    add_action( 'woocommerce_new_product', [$this, 'updateProductTransientAction'] );
+//	    add_action( 'wp_trash_post', [$this, 'removeProductTransient'] );
+//	    add_action( 'transition_post_status', [$this, 'changeProductTransientStatus'], 10, 3);
+//	    add_action('untrash_post', [$this, 'updateProductTransientAction']);
     }
+
+//	function updateProductTransientAction($id) {
+//		ProductsTransients::updateProductTransient($id);
+//	}
+//
+//	function removeProductTransient($id) {
+//		$postType = get_post_type($id);
+//		if($postType == 'product') {
+//			ProductsTransients::removeProductTransient($id);
+//		}
+//	}
+//
+//	function changeProductTransientStatus($newStatus, $oldStatus, $post) {
+//    	$id = $post->ID;
+//    	$type = $post->post_type;
+//    	if($type == 'product') {
+//    		if($newStatus == 'publish') {
+//    			ProductsTransients::updateProductTransient($id);
+//		    } else if($oldStatus == 'publish'){
+//    			ProductsTransients::removeProductTransient($id);
+//		    }
+//	    }
+//	}
+
+//	function react2wp_hide_products_without_price( $q ){
+//		$meta_query = $q->get( 'meta_query' );
+//		$meta_query[] = array(
+//			'key'       => '_price',
+//			'value'     => '',
+//			'compare'   => '!='
+//		);
+//		$q->set( 'meta_query', $meta_query );
+//	}
 }
