@@ -32,7 +32,9 @@ class Product {
 			$this->imageID = $args['image_id'];
 			$this->downloadable = $args['downloadable'];
 			$this->virtual = $args['virtual'];
-			$this->galleryImgIDs = $args['gallery_image_ids'];
+			if(!empty($args['gallery_image_ids'])) {
+				$this->galleryImgIDs = $args['gallery_image_ids'];
+			}
 			$this->stockStatus = $args['stock_status'];
 			$this->stockManaging = $args['stock_managing'];
 			$this->quantity = (array_key_exists('quantity', $args)) ? $args['quantity'] : 0;

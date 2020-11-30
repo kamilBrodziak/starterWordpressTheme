@@ -17,23 +17,27 @@ class VariableProductController extends BaseProductController {
 		$this->withAttributeLabels();
 	}
 
-	public function withVariations() {
+	public function withVariations($customDb = false) {
 		$product      = $this->product;
 		$variations   = [];
 		$combinations = [];
 		$variationsObjs = [];
-		foreach ($product->get_children() as $id) {
-			$variation = new \WC_Product_Variation($id);
-			if(! $variation || ! $variation->exists() ||
-			   (Tools::hideOutOfStockItems() && ! $variation->is_in_stock()))
-				continue;
-			if ( apply_filters( 'woocommerce_hide_invisible_variations', true, $variation->get_id(), $variation )
-			     && ! $variation->variation_is_visible() ) {
-				continue;
+		if(!$customDb) {
+			foreach ( $product->get_children() as $id ) {
+				$variation = new \WC_Product_Variation( $id );
+				if ( ! $variation || ! $variation->exists() ||
+				     ( Tools::hideOutOfStockItems() && ! $variation->is_in_stock() ) ) {
+					continue;
+				}
+				if ( apply_filters( 'woocommerce_hide_invisible_variations', true, $variation->get_id(), $variation )
+				     && ! $variation->variation_is_visible() ) {
+					continue;
+				}
+				$variationsObjs[] = $variation;
 			}
-			$variationsObjs[] = $variation;
+		} else {
+			$variationsObjs = $product->get_available_variations( 'objects' );
 		}
-//		$variationsObjs = $product->get_available_variations( 'objects' );
 		foreach ( $variationsObjs as $variation ) {
 //			if($variation->is_purchasable()) {
 			$variationAttrs   = $variation->get_variation_attributes();

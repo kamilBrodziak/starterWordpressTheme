@@ -119,7 +119,9 @@ class ProductsController {
 	}
 
 	public function getProducts($products = null) {
+		$customDb = true;
 		if(is_null($products)) {
+			$customDb = false;
 			$products = wc_get_products($this->attrs);
 		}
 		$productsDetails = [];
@@ -128,7 +130,7 @@ class ProductsController {
 			$productController = $this->getProductController($product);
 			$this->products[] = $product;
 			if($this->renderVariation && $productController->isVariable()) {
-				$productController->withVariations();
+				$productController->withVariations($customDb);
 			}
 			$productsDetails[] = $productController->getRenderDetails();
 //			}
@@ -153,6 +155,6 @@ class ProductsController {
 			if($product->is_type('simple')) return new SimpleProductController($product);
 			if($product->is_type('variable')) return new VariableProductController($product);
 		}
-		return null;
+		return new SimpleProductController($product);
 	}
 }

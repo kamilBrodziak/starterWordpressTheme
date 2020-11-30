@@ -2,8 +2,6 @@
 
 namespace Inc\Base;
 
-use Inc\Controllers\Woocommerce\ProductsTransients;
-
 class WooCommerceSettings {
 
     public function register() {

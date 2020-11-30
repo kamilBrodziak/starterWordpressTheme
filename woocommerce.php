@@ -21,7 +21,7 @@ if ( is_singular( 'product' ) ) {
 	                                         ->orderByName()
 											 ->withVariationRender()
 	                                         ->orderASC()
-	                                         ->getProducts();
+	                                         ->getProductsFromKBDB();
 
 //	$context['products'] = $productController->withVariationRender()->getProductsFromKBDB();
 //	$context['products'] = $productController->limit(80)->withVariationRender()->getProductsFromTransients();

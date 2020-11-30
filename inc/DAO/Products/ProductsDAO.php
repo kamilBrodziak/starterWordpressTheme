@@ -1,6 +1,4 @@
 <?php
-
-
 namespace Inc\DAO\Products;
 
 use Inc\Models\Products\Product;
@@ -14,53 +12,72 @@ class ProductsDAO {
 		global $wpdb;
 		$productsTable = "{$wpdb->base_prefix}kb_products";
 		$productsInfoTable = "{$wpdb->base_prefix}kb_products_info";
+		$productsVariantsTable = "{$wpdb->base_prefix}kb_products_variants";
 		self::removeTable($productsTable);
 		self::removeTable($productsInfoTable);
+		self::removeTable($productsVariantsTable);
 		self::createProductsTable($productsTable);
 		self::createProductsInfoTable($productsInfoTable);
-		self::insertProductsIntoTable($productsTable, $productsInfoTable);
+		self::createProductsVariantsTable($productsVariantsTable);
+		self::insertProductsIntoTable($productsTable, $productsInfoTable, $productsVariantsTable);
 
 	}
 
-	private function createProductsTable($tableName) {
+	private static function createProductsTable($tableName) {
 		global $wpdb;
 		$charset_collate = $wpdb->get_charset_collate();
 		$sql = " CREATE TABLE `{$tableName}` (
  			ID bigint(20) NOT NULL,
- 			type text,
+ 			gallery_image_ids text,
+ 			min_sale_price decimal(19,4),
+ 			max_sale_price decimal(19,4),
  			PRIMARY KEY (ID)
  		) $charset_collate";
 		$wpdb->query($sql);
 	}
 
-	private function createProductsInfoTable($tableName) {
+	private static function createProductsInfoTable($tableName) {
 		global $wpdb;
 		$charset_collate = $wpdb->get_charset_collate();
 		$sql = " CREATE TABLE `{$tableName}` (
  			ID bigint(20) NOT NULL,
  			image_id bigint(20),
- 			title text,
+ 			type text,
+ 			name text,
  			min_price decimal(19,4),
  			max_price decimal(19,4),
- 			onsale tinyint(1),
+ 			on_sale tinyint(1),
  			stock_managing tinyint(1),
- 			stock_quantity double,
+ 			quantity double,
  			stock_status varchar(100),
  			downloadable tinyint(1),
  			virtual tinyint(1),
- 			parent_id bigint(20),
+ 			add_to_cart_url text,
+ 			attributes text,
  			PRIMARY KEY (ID)
  		) $charset_collate";
 		$wpdb->query($sql);
 	}
 
-	private function removeTable($tableName) {
+	private static function createProductsVariantsTable($tableName) {
+		global $wpdb;
+		$charset_collate = $wpdb->get_charset_collate();
+		$sql = " CREATE TABLE `{$tableName}` (
+ 			ID bigint(20) NOT NULL,
+ 			parent_id bigint(20),
+ 			PRIMARY KEY (ID),
+	 		FOREIGN KEY (parent_id) REFERENCES {$wpdb->base_prefix}kb_products(ID)
+ 		) $charset_collate";
+		$wpdb->query($sql);
+	}
+
+	private static function removeTable($tableName) {
 		global $wpdb;
 		$removeTable = "DROP TABLE IF EXISTS $tableName;";
 		$wpdb->query($removeTable);
 	}
 
-	private function insertProductsIntoTable($productsTable, $productsInfoTable) {
+	private static function insertProductsIntoTable($productsTable, $productsInfoTable, $productsVariantsTable) {
 		global $wpdb;
 		$products = wc_get_products([
 			'status' => 'publish',
@@ -68,134 +85,159 @@ class ProductsDAO {
 		]);
 		echo count($products);
 		foreach ($products as $product) {
-			$argsProductsInfo = self::getQueryArgs($product);
-			$argsProduct = ['ID' => $argsProductsInfo['ID'], 'type' => $argsProductsInfo['type']];
-			$isVariable = $argsProductsInfo['type'] == 'variable';
+			$argsProductInfo = self::getQueryArgs($product);
+			$argsProduct = ['ID' => $argsProductInfo['ID'],
+                'gallery_image_ids' => implode(',',$argsProductInfo['gallery_image_ids']),
+                'min_sale_price' => !empty($argsProductInfo['min_sale_price']) ? $argsProductInfo['min_sale_price'] : null,
+                'max_sale_price' => !empty($argsProductInfo['max_sale_price']) ? $argsProductInfo['max_sale_price'] : null
+			];
+			unset($argsProductInfo['gallery_image_ids']);
+			unset($argsProductInfo['min_sale_price']);
+			unset($argsProductInfo['max_sale_price']);
+			$stockManaging = 0;
+			$stockManaging += $argsProductInfo['stock_managing'] ? 1 : 0;
+			$stockManaging += ($stockManaging > 0 && $argsProductInfo['is_backorder']) ? 1 : 0;
+			$stockManaging += ($stockManaging > 1 && $argsProductInfo['notify_backorder']) ? 1 : 0;
+			$argsProductInfo['stock_managing'] = $stockManaging;
+			unset($argsProductInfo['is_backorder']);
+			unset($argsProductInfo['notify_backorder']);
+			$isVariable = ($argsProductInfo['type'] == 'variable');
 			$variations = [];
 			if($isVariable) {
-				$variations = self::getVariations($product);
-				if(isset($variations['min_price'])) {
-					$argsProductsInfo['min_price'] = $variations['min_price'];
-				}
-				if(isset($variations['max_price'])) {
-					$argsProductsInfo['max_price'] = $variations['max_price'];
-				}
+				$argsProductInfo['attributes'] = json_encode($argsProductInfo['attributes']);
+				$variations = $argsProductInfo['variations'];
+				unset($argsProductInfo['variations']);
 			}
-			unset($argsProductsInfo['type']);
 			$wpdb->insert($productsTable, $argsProduct);
-			$wpdb->insert($productsInfoTable, $argsProductsInfo);
+			$wpdb->insert($productsInfoTable, $argsProductInfo);
 			if($isVariable) {
-				foreach ($variations['args'] as $argsVariationInfo) {
-//					$argsVariation = ['ID' => $argsVariationInfo['ID'], 'parent_id' => $argsProductsInfo['ID']];
-//					$wpdb->insert($productsTable, $argsVariation);
-					if($argsVariationInfo['type'] === 'variation') {
-						$argsVariationInfo['parent_id'] = $argsProductsInfo['ID'];
+				foreach ($variations as $variation) {
+					$argsVariationTable = ['ID' => $variation['ID'],
+					                       'parent_id' => $argsProduct['ID']];
+					unset($variation['parent_id']);
+					$stockManaging = 0;
+					$stockManaging += $variation['stock_managing'] ? 1 : 0;
+					$stockManaging += ($stockManaging > 0 && $variation['is_backorder']) ? 1 : 0;
+					$stockManaging += ($stockManaging > 1 && $variation['notify_backorder']) ? 1 : 0;
+					$variation['stock_managing'] = $stockManaging;
+					unset($variation['is_backorder']);
+					unset($variation['notify_backorder']);
+					unset($variation['gallery_image_ids']);
+					$attributes = [];
+					foreach ($variation['attributes'] as $key => $value) {
+							$attributes[] = "$key:$value";
 					}
-					unset($argsVariationInfo['type']);
-					$wpdb->insert($productsInfoTable, $argsVariationInfo);
+					$variation['attributes'] = implode(',', $attributes);
+					var_dump($variation);
+					$wpdb->insert($productsVariantsTable, $argsVariationTable);
+					$wpdb->insert($productsInfoTable, $variation);
 				}
 			}
 		}
-	}
-
-	private static function getVariations($product) {
-		$variations = [
-			'args' => [],
-		];
-		$minPrice = -1;
-		$maxPrice = -1;
-		$ind = 0;
-		foreach ($product->get_available_variations('objects') as $variation) {
-			$variationAttrs = $variation->get_variation_attributes();
-			$variationTitle = $product->get_name() . ' - ';
-			$variationAttrsTitles = array_keys($product->get_variation_attributes());
-			$jind = 0;
-			foreach ($variationAttrs as $key => $value) {
-				$variationTitle .= $variationAttrsTitles[$jind] . ':' . $value;
-				if($jind != count($variationAttrs) - 1) {
-					$variationTitle .= ';';
-				}
-				$jind++;
-			}
-
-			$args = self::getQueryArgs($variation);
-			$args['title'] = $variationTitle;
-			if($ind == 0) {
-				$minPrice = (isset($args['min_price'])) ? $args['min_price'] : $args['max_price'];
-				$maxPrice = $args['max_price'];
-				$ind++;
-			} else {
-				$min = (isset($args['min_price'])) ? $args['min_price'] : $minPrice;
-				if($min < $minPrice) {
-					$minPrice = $min;
-				}
-				if($args['max_price'] > $maxPrice) {
-					$maxPrice = $args['max_price'];
-				}
-			}
-			$variations['args'][] = $args;
-		}
-		if($minPrice > -1 && $minPrice != $maxPrice) {
-			$variations['min_price'] = $minPrice;
-		}
-		if($maxPrice > -1) {
-			$variations['max_price'] = $maxPrice;
-		}
-		return $variations;
 	}
 
 	private static function getQueryArgs($product) {
-		$args = [];
-		$args['ID'] = $product->get_id();
-		$args['image_id'] = intval($product->get_image_id());
-		$args['title'] = $product->get_name();
-		$args['type'] = $product->get_type();
-		$args['onsale'] = $product->is_on_sale() ? 1 : 0;
-		$args['max_price'] = floatval($product->get_regular_price());
-		if($args['onsale']) {
-			$args['min_price'] = floatval($product->get_sale_price());
+		$type = $product->get_type();
+		$obj = null;
+		if($type == 'variable') {
+			$obj = new VariableProduct($product);
+		} else if($type == 'variation') {
+			$obj = new VariationProduct($product);
+		} else {
+			$obj = new Product($product);
 		}
-
-		$args['stock_status'] = $product->get_stock_status();
-		$stockManaging = ($product->managing_stock()) ? 1 : 0;
-		if($stockManaging == 1) {
-			$args['stock_quantity'] = $product->get_stock_quantity();
-			$stockManaging = $product->backorders_allowed() ? 2 : 1;
-			if($stockManaging == 2) {
-				$stockManaging = $product->backorders_require_notification() ? 3 : 2;
-			}
-		}
-		$args['stock_managing'] = $stockManaging;
-		$args['downloadable'] = $product->is_downloadable() ? 1 : 0;
-		$args['virtual'] = $product->is_virtual() ? 1 : 0;
-		return $args;
+		return $obj->getParams();
 	}
 
 	public static function getProducts($args) {
 		global $wpdb;
-		$productsArgs = $wpdb->get_results("
-				SELECT * 
-				FROM {$wpdb->base_prefix}kb_products 
-				INNER JOIN {$wpdb->base_prefix}kb_products_info
-				ON {$wpdb->base_prefix}kb_products.ID = {$wpdb->base_prefix}kb_products_info.ID;
-				", "ARRAY_A");
-		$products = [];
-		foreach ($productsArgs as $productArgs) {
-			if($productArgs['type'] === 'variable') {
-				$id = $productArgs['ID'];
-				$variationsArgs = $wpdb->get_results("
+		$productsQuery = $wpdb->get_results("
 					SELECT *
-					FROM {$wpdb->base_prefix}kb_products_info
-					WHERE parent_id = $id;
-				", 'ARRAY_A');
-//				if(count($variationsArgs)) {
-					$productArgs['variations'] = $variationsArgs;
-					$products[] = new VariableProduct($productArgs);
-//				}
-			} else {
-				$products[] = new Product($productArgs);
+					FROM {$wpdb->base_prefix}kb_products
+					INNER JOIN {$wpdb->base_prefix}kb_products_info
+					ON {$wpdb->base_prefix}kb_products.ID = {$wpdb->base_prefix}kb_products_info.ID;
+				", "ARRAY_A");
+		$productsArgs = [];
+		$variableIDs = [];
+		foreach ($productsQuery as $productArg) {
+			$productsArgs[$productArg['ID']] = self::parseBasicProductInfo($productArg);
+			if($productArg['type'] === 'variable') {
+				$variableIDs[] = $productArg['ID'];
 			}
 		}
+		$variableIDs = implode("','", $variableIDs);
+		$variationsQuery = $wpdb->get_results("
+					SELECT *
+					FROM {$wpdb->base_prefix}kb_products_variants AS variants
+					INNER JOIN {$wpdb->base_prefix}kb_products_info
+					ON variants.ID = {$wpdb->base_prefix}kb_products_info.ID
+					WHERE variants.parent_id IN ('{$variableIDs}')
+					ORDER BY variants.parent_id;
+				", "ARRAY_A");
+		foreach ($variationsQuery as $variationArgs) {
+			$productsArgs[$variationArgs['parent_id']]['variations'][] = self::parseBasicProductInfo($variationArgs);
+		}
+
+
+		$products = [];
+		foreach ($productsArgs as $key => $productArgs) {
+			$products[] = self::getProduct($productArgs);
+		}
 		return $products;
+	}
+
+	private static function getProduct($args) {
+		switch ($args['type']) {
+			case 'variable':
+				return new VariableProduct($args);
+			case 'simple':
+			default:
+				return new Product($args);
+		}
+	}
+
+	private static function parseBasicProductInfo($args) {
+		$product = [];
+		$product['ID'] = $args['ID'];
+		$product['name'] = $args['name'];
+		$product['max_price'] = $args['max_price'];
+		$product['min_price'] = !empty($product['min_price']) ? $args['min_price'] : $args['max_price'];
+		$product['type'] = $args['type'];
+		$product['on_sale'] = ($args['on_sale'] == 1);
+		$product['image_id'] = $args['image_id'];
+		$product['downloadable'] = $args['downloadable'];
+		$stockManaging = $args['stock_managing'];
+		$product['stock_managing'] = $stockManaging > 0;
+		$product['is_backorder'] = $stockManaging > 1;
+		$product['notify_backorder'] = $stockManaging > 2;
+		$product['stock_status'] = $args['stock_status'];
+		$product['quantity'] = $args['quantity'];
+		$product['virtual'] = $args['virtual'];
+		$product['add_to_cart_url'] = $args['add_to_cart_url'];
+
+		if($product['type'] == 'variable' || $product['type'] == 'variation') {
+
+		}
+		if($product['type'] != 'variation') {
+			$product['gallery_image_ids'] = (!empty($args['gallery_image_ids'])) ?
+				explode(',', $args['gallery_image_ids']) : [];
+		} else {
+			$product['parent_id'] = $args['ID'];
+			$attrs = explode(',', $args['attributes']);
+			$product['attributes'] = [];
+			foreach ($attrs as $attr) {
+				$attr = explode(':', $attr);
+				if(count($attr) < 2) continue;
+				$product['attributes'][$attr[0]] = $attr[1];
+			}
+		}
+
+		if($product['type'] == 'variable') {
+			$product['attributes'] = json_decode($args['attributes']);
+			$product['variations'] = [];
+			$product['max_sale_price'] = !empty($args['max_sale_price']) ? $args['max_sale_price'] : $args['max_price'];
+			$product['min_sale_price'] = !empty($args['min_sale_price']) ? $args['min_sale_price'] : $args['min_price'];
+		}
+		return $product;
 	}
 }
