@@ -6,89 +6,127 @@ namespace Inc\Models\Products;
 
 class Product {
 	private $id,
-		$name,
+		$name = 'Unnammed',
 		$regularPrice,
 		$salePrice,
-		$quantity,
-		$stockStatus,
-		$stockManaging,
-		$isBackorder,
-		$type,
-		$notifyBackorder,
-		$imageID,
-		$downloadable,
-		$virtual,
-		$onSale,
+		$quantity = 0,
+		$stockStatus = 'instock',
+		$stockManaging = false,
+		$isBackorder = false,
+		$type = 'simple',
+		$notifyBackorder = false,
+		$imageID = 0,
+		$downloadable = false,
+		$virtual = false,
+		$onSale = false,
 		$galleryImgIDs = [],
-		$addToCartUrl;
-	public function __construct($args) {
-		if(is_array($args)) {
-			$this->id = $args['ID'];
-			$this->name = $args['name'];
-			$this->regularPrice = $args['max_price'];
-			$this->onSale = $args['on_sale'];
-			$this->salePrice = array_key_exists('min_price', $args) ? $args['min_price'] : $this->regularPrice;
-			$this->type = $args['type'];
-			$this->imageID = $args['image_id'];
-			$this->downloadable = $args['downloadable'];
-			$this->virtual = $args['virtual'];
-			if(!empty($args['gallery_image_ids'])) {
-				$this->galleryImgIDs = $args['gallery_image_ids'];
-			}
-			$this->stockStatus = $args['stock_status'];
-			$this->stockManaging = $args['stock_managing'];
-			$this->quantity = (array_key_exists('quantity', $args)) ? $args['quantity'] : 0;
-			$this->isBackorder = (array_key_exists('is_backorder', $args)) ? $args['is_backorder'] : false;
-			$this->notifyBackorder = (array_key_exists('notify_backorder', $args)) ? $args['notify_backorder'] : false;
-
-			$this->addToCartUrl = $args['add_to_cart_url'];
-		} elseif (is_object($args)) {
-			$product = $args;
-			$this->id = $product->get_id();
-			$this->name = $product->get_name();
-			$this->regularPrice = floatval($product->get_regular_price());
-			$this->onSale = $product->is_on_sale();
-			$this->salePrice = floatval($product->get_sale_price());
-			$this->stockStatus = $product->get_stock_status();
-			$this->stockManaging = $product->managing_stock();
-			$this->quantity = $product->get_stock_quantity();
-			$this->type = $product->get_type();
-			$this->imageID = intval($product->get_image_id());
-			$this->isBackorder = $product->backorders_allowed();
-			$this->notifyBackorder = $product->backorders_require_notification();
-			$this->downloadable = $product->is_downloadable();
-			$this->virtual = $product->is_virtual();
-			$this->galleryImgIDs = $product->get_gallery_image_ids();
-			$this->addToCartUrl = $product->add_to_cart_url();
-		}
+		$addToCartUrl = "",
+		$categoryIDs = [],
+		$shortDescription = "",
+		$description = "",
+		$crossSellIDS = [],
+		$upsellIDs = [],
+		$soldIndividually = false,
+		$weight = 0,
+		$dimensions = "",
+		$dateCreated = null,
+		$tagIDs = [];
+	public function __construct($id) {
+		$this->id = $id;
 	}
 
-	public function getParams() {
-		$params = [
-			'ID' => $this->id,
-			'name' => $this->name,
-			'max_price' => $this->regularPrice,
-			'on_sale' => $this->onSale,
-			'type' => $this->type,
-			'image_id' => $this->imageID,
-			'downloadable' => $this->downloadable,
-			'virtual' => $this->virtual,
-			'gallery_image_ids' => $this->galleryImgIDs,
-			'stock_status' => $this->stockStatus,
-			'stock_managing' => $this->stockManaging,
-			'add_to_cart_url' => $this->addToCartUrl
-		];
-		if($this->stockManaging) {
-			$params['quantity'] = $this->quantity;
-			$params['is_backorder'] = $this->isBackorder;
-			if($params['is_backorder']) {
-				$params['notify_backorder'] = $this->notifyBackorder;
-			}
-		}
-		if($this->onSale) {
-			$params['min_price'] = $this->salePrice;
-		}
-		return $params;
+	public function get_tag_ids() {
+		return $this->tagIDs;
+	}
+
+	public function withTagIDs($tagIDs) {
+		$this->tagIDs = $tagIDs;
+		return $this;
+	}
+
+	public function get_date_created() {
+		return $this->dateCreated;
+	}
+
+	public function withDateCreated($dateCreated) {
+		$this->dateCreated = $dateCreated;
+		return $this;
+	}
+
+	public function get_weight() {
+		return $this->weight;
+	}
+
+	public function withWeight($weight) {
+		$this->weight = $weight;
+		return $this;
+	}
+
+	public function get_dimensions() {
+		return $this->dimensions;
+	}
+
+	public function withDimensions($dimensions) {
+		$this->dimensions = $dimensions;
+		return $this;
+	}
+
+	public function get_upsell_ids() {
+		return $this->upsellIDs;
+	}
+
+	public function get_cross_sell_ids() {
+		return $this->crossSellIDS;
+	}
+
+	public function is_sold_individually() {
+		return $this->soldIndividually;
+	}
+
+	public function get_sold_individually() {
+		return $this->is_sold_individually();
+	}
+
+	public function withSoldIndividually($isSold) {
+		$this->soldIndividually = $isSold;
+		return $this;
+	}
+
+	public function withUpsellIDs($ids) {
+		$this->upsellIDs = $ids;
+		return $this;
+	}
+
+	public function withCrossSellIDs($ids) {
+		$this->crossSellIDS = $ids;
+		return $this;
+	}
+
+	public function get_category_ids() {
+		return $this->categoryIDs;
+	}
+
+	public function withCategoryIDs($categoryIDs) {
+		$this->categoryIDs = $categoryIDs;
+		return $this;
+	}
+
+	public function get_description() {
+		return $this->description;
+	}
+
+	public function withDescription($description) {
+		$this->description = $description;
+		return $this;
+	}
+
+	public function get_short_description() {
+		return $this->shortDescription;
+	}
+
+	public function withShortDescription($description) {
+		$this->shortDescription = $description;
+		return $this;
 	}
 
 	public function get_id() {
@@ -99,64 +137,141 @@ class Product {
 		return $this->imageID;
 	}
 
+	public function withImageID($id) {
+		$this->imageID = $id;
+		return $this;
+	}
+
 	public function get_name() {
 		return $this->name;
+	}
+
+	public function withName($name) {
+		$this->name = $name;
+		return $this;
+
 	}
 
 	public function add_to_cart_url() {
 		return $this->addToCartUrl;
 	}
 
+	public function withAddToCartUrl($url) {
+		$this->addToCartUrl = $url;
+		return $this;
+	}
+
 	public function get_type() {
 		return $this->type;
+	}
+
+	public function withType($type) {
+		$this->type = $type;
+		return $this;
 	}
 
 	public function get_gallery_image_ids() {
 		return $this->galleryImgIDs;
 	}
 
+	public function withGalleryImageIDs($ids) {
+		$this->galleryImgIDs = $ids;
+		return $this;
+	}
+
 	public function get_regular_price() {
 		return $this->regularPrice;
+	}
+
+	public function withRegularPrice($price) {
+		$this->regularPrice = $price;
+		$this->salePrice = $price;
+		return $this;
 	}
 
 	public function get_sale_price() {
 		return $this->salePrice;
 	}
 
+	public function withSalePrice($price) {
+		$this->salePrice = $price;
+		return $this;
+	}
+
 	public function is_on_sale() {
 		return $this->onSale;
+	}
+
+	public function withOnSale($onSale) {
+		$this->onSale = $onSale;
+		return $this;
 	}
 
 	public function is_in_stock() {
 		return $this->stockStatus == 'instock' || $this->stockStatus == 'onbackorder';
 	}
 
+	public function withStockStatus($status) {
+		$this->stockStatus = $status;
+		return $this;
+	}
+
 	public function is_downloadable() {
 		return $this->downloadable;
+	}
+
+	public function withDownloadable($isDownloadable) {
+		$this->downloadable = $isDownloadable;
+		return $this;
 	}
 
 	public function is_virtual() {
 		return $this->virtual;
 	}
 
+	public function withVirtual($isVirtual) {
+		$this->virtual = $isVirtual;
+		return $this;
+	}
+
 	public function managing_stock() {
-		return $this->stockManaging > 0;
+		return $this->stockManaging;
+	}
+
+	public function withManagingStock($managingStock) {
+		$this->stockManaging = $managingStock;
+		return $this;
 	}
 
 	public function get_stock_quantity() {
 		return $this->quantity;
 	}
 
+	public function withQuantity($stockQuantity) {
+		$this->quantity = $stockQuantity;
+		return $this;
+	}
+
 	public function is_on_backorder($cartQuantity = 0) {
-		return $this->stockManaging >= 2;
+		return $this->isBackorder;
 	}
 
 	public function backorders_allowed() {
-		return $this->stockManaging >= 2;
+		return $this->isBackorder;
+	}
+
+	public function withBackordersAllowed($isBackorder) {
+		$this->isBackorder = $isBackorder;
+		return $this;
 	}
 
 	public function backorders_require_notification() {
-		return $this->stockManaging == 3;
+		return $this->notifyBackorder;
+	}
+
+	public function withBackordersNotifications($notify) {
+		$this->notifyBackorder = $notify;
+		return $this;
 	}
 
 	public function is_type($type) {

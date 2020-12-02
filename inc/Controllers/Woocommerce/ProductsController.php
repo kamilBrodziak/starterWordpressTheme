@@ -20,14 +20,6 @@ class ProductsController {
 		return $this;
 	}
 
-	public function categories($category) {
-		if(is_array($category)) {
-			$this->attrs['category'] = $category;
-		} else {
-			$this->attrs['category'] = [$category];
-		}
-	}
-
 	public function limit($limit) {
 		$this->attrs['limit'] = $limit;
 		return $this;
@@ -120,7 +112,7 @@ class ProductsController {
 
 	public function getProducts($products = null) {
 		$customDb = true;
-		if(is_null($products)) {
+		if(empty($products)) {
 			$customDb = false;
 			$products = wc_get_products($this->attrs);
 		}
@@ -141,7 +133,7 @@ class ProductsController {
 	}
 
 	public function getProductsFromKBDB() {
-		$products = ProductsDAO::getProducts($this->attrs);
+		$products = ProductsDAO::getProducts($this->attrs, $this->renderVariation);
 		return $this->getProducts($products);
 	}
 
