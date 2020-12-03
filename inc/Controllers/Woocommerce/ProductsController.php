@@ -3,12 +3,19 @@ namespace Inc\Controllers\Woocommerce;
 
 use Inc\Controllers\Woocommerce\Products\SimpleProductController;
 use Inc\Controllers\Woocommerce\Products\VariableProductController;
+use Inc\Controllers\Woocommerce\Products\VariationProductController;
 use Inc\DAO\Products\ProductsDAO;
 
 class ProductsController {
 	private $attrs = [];
 	private $renderVariation = false;
 	private $products = [];
+	private $simpleProductOptions = null,
+			$variableProductOptions = null,
+			$variationProductOptions = null,
+			$externalProductOptions = null,
+			$groupedProductOptions = null;
+
 
 	public function __construct() {
 //		add_filter( 'loop_shop_per_page', [$this, 'productsPerPage'], 20 );
@@ -106,6 +113,31 @@ class ProductsController {
 		return $this;
 	}
 
+	public function withSimpleProductOptions($options) {
+		$this->simpleProductOptions = $options;
+		return $this;
+	}
+
+	public function withVariableProductOptions($options) {
+		$this->variableProductOptions = $options;
+		return $this;
+	}
+
+	public function withVariationProductOptions($options) {
+		$this->variationProductOptions = $options;
+		return $this;
+	}
+
+	public function withExternalProductOptions($options) {
+		$this->externalProductOptions = $options;
+		return $this;
+	}
+
+	public function withGroupedProductOptions($options) {
+		$this->groupedProductOptions = $options;
+		return $this;
+	}
+
 	public function clear() {
 		$this->attrs = [];
 	}
@@ -119,10 +151,29 @@ class ProductsController {
 		$productsDetails = [];
 		$this->products = [];
 		foreach ($products as $product) {
+
 			$productController = $this->getProductController($product);
 			$this->products[] = $product;
 			if($this->renderVariation && $productController->isVariable()) {
-				$productController->withVariations($customDb);
+				$variationsObjs = [];
+				if(!$customDb) {
+					foreach ( $product->get_children() as $id ) {
+						$variation = new \WC_Product_Variation( $id );
+						if ( ! $variation || ! $variation->exists() || ( Tools::hideOutOfStockItems() &&
+                                             !$variation->is_in_stock() ) || !$variation->variation_is_visible() ) {
+							continue;
+						}
+						$variationsObjs[] = $variation;
+					}
+				} else {
+					$variationsObjs = $product->get_available_variations( 'objects' );
+				}
+				$variationControllers = [];
+				foreach ($variationsObjs as $obj) {
+					$variationControllers[] = $this->getProductController($obj);
+				}
+
+				$productController->withVariations($variationControllers);
 			}
 			$productsDetails[] = $productController->getRenderDetails();
 //			}
@@ -137,16 +188,15 @@ class ProductsController {
 		return $this->getProducts($products);
 	}
 
-	public static function getProductController($idOrProduct) {
-		$product = $idOrProduct;
-		if(is_int($idOrProduct)) {
-			$product = wc_get_product($idOrProduct);
+	public function getProductController($product) {
+		switch ($product->get_type()) {
+			case 'simple':
+				return new SimpleProductController($product, $this->simpleProductOptions);
+			case 'variable':
+				return new VariableProductController($product, $this->variableProductOptions);
+			case 'variation':
+				return new VariationProductController($product, $this->variationProductOptions);
 		}
-
-		if($product) {
-			if($product->is_type('simple')) return new SimpleProductController($product);
-			if($product->is_type('variable')) return new VariableProductController($product);
-		}
-		return new SimpleProductController($product);
+		return null;
 	}
 }

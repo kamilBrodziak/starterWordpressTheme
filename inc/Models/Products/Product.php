@@ -9,7 +9,7 @@ class Product {
 		$name = 'Unnammed',
 		$regularPrice,
 		$salePrice,
-		$quantity = 0,
+		$stockQuantity = 0,
 		$stockStatus = 'instock',
 		$stockManaging = false,
 		$isBackorder = false,
@@ -30,9 +30,59 @@ class Product {
 		$weight = 0,
 		$dimensions = "",
 		$dateCreated = null,
-		$tagIDs = [];
+		$tagIDs = [],
+		$saleDateStart = null,
+		$saleDateEnd = null,
+		$shippingClass,
+		$averageRating,
+		$totalSales;
 	public function __construct($id) {
 		$this->id = $id;
+	}
+
+	public function get_shipping_class() {
+		return $this->shippingClass;
+	}
+
+	public function withShippingClass($class) {
+		$this->shippingClass = $class;
+		return $this;
+	}
+
+	public function withAverageRating($rating) {
+		$this->averageRating = $rating;
+		return $this;
+	}
+
+	public function withTotalSales($totalSales) {
+		$this->totalSales = $totalSales;
+		return $this;
+	}
+
+	public function get_average_rating() {
+		return $this->averageRating;
+	}
+
+	public function get_total_sales() {
+		return $this->totalSales;
+	}
+
+	public function get_sale_date_on_from(){
+		return $this->saleDateStart;
+	}
+
+	public function get_sale_date_on_to() {
+		return $this->saleDateEnd;
+	}
+
+	public function withSaleDateStart($date) {
+		$this->saleDateStart = $date;
+		return $this;
+	}
+
+	public function withSaleDateEnd($date) {
+		$this->saleDateEnd = $date;
+		return $this;
 	}
 
 	public function get_tag_ids() {
@@ -244,12 +294,16 @@ class Product {
 	}
 
 	public function get_stock_quantity() {
-		return $this->quantity;
+		return $this->stockQuantity;
 	}
 
-	public function withQuantity($stockQuantity) {
-		$this->quantity = $stockQuantity;
+	public function withStockQuantity($stockQuantity) {
+		$this->stockQuantity = $stockQuantity;
 		return $this;
+	}
+
+	public function get_permalink() {
+		return get_permalink($this->id);
 	}
 
 	public function is_on_backorder($cartQuantity = 0) {

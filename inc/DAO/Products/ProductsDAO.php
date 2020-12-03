@@ -60,18 +60,24 @@ class ProductsDAO {
  			image_id bigint(20),
  			type text,
  			name text,
- 			min_price decimal(19,4),
- 			max_price decimal(19,4),
+ 			min_price decimal(19,2),
+ 			max_price decimal(19,2),
+ 			sale_start_date date,
+ 			sale_end_date date,
  			on_sale tinyint(1),
  			stock_managing tinyint(1),
- 			quantity double,
+ 			stock_quantity double,
  			stock_status varchar(100),
  			downloadable tinyint(1),
  			virtual tinyint(1),
  			add_to_cart_url text,
  			attributes text,
  			weight text,
-			dimensions text, 			
+			dimensions text,
+			total_sales decimal(30,2),
+			tax_status varchar(100),
+			tax_class varchar(100),
+			average_rating decimal(30, 2),	
  			PRIMARY KEY (ID)
  		)";
 		self::createTable($sql);
@@ -103,13 +109,16 @@ class ProductsDAO {
 			'on_sale' => $product->is_on_sale(),
 			'downloadable' => $product->is_downloadable() ? 1 : 0,
 			'virtual' => $product->is_virtual() ? 1 : 0,
-			'stock_status' => $product->is_in_stock()
+			'stock_status' => $product->is_in_stock(),
+			'shipping_class' => $product->get_shipping_class(),
+			'average_rating' => $product->get_average_rating(),
+			'total_sales' => $product->get_total_sales()
 		];
 		$managingStock = $product->managing_stock() ? 1 : 0;
 		if($managingStock) {
 			$managingStock += $product->backorders_allowed() ? 1 : 0;
 			$managingStock += $product->backorders_require_notification() ? 1 : 0;
-			$productInfoTableDetails['quantity'] = $product->get_stock_quantity();
+			$productInfoTableDetails['stock_quantity'] = $product->get_stock_quantity();
 		}
 		$productInfoTableDetails['stock_managing'] = $managingStock;
 		if($productInfoTableDetails['on_sale']) {
@@ -121,6 +130,8 @@ class ProductsDAO {
 		if($productInfoTableDetails['type'] == 'variable' || $productInfoTableDetails['type'] == 'variation') {
 			$productInfoTableDetails['attributes'] = json_encode($product->get_variation_attributes());
 		}
+		$productInfoTableDetails['sale_start_date'] = $product->get_date_on_sale_from();
+		$productInfoTableDetails['sale_end_date'] = $product->get_date_on_sale_to();
 		$weight = $product->get_weight();
 		if(!empty($weight)) {
 			$productInfoTableDetails['weight'] = $weight;
@@ -199,7 +210,7 @@ class ProductsDAO {
 	public static function insertProductIntoTable($product) {
 		global $wpdb;
 		if(is_int($product)) $product = wc_get_product($product);
-		if(!is_object($product)) return;
+		if(!is_object($product)) return [];
 		$variationIDs = [];
 		if($product->is_type('variable')) {
 			foreach ($product->get_available_variations('objects') as $variation) {
@@ -379,7 +390,12 @@ class ProductsDAO {
 		        ->withStockStatus($args['stock_status'])
 		        ->withManagingStock($args['stock_managing'] > 0)
 		        ->withBackordersAllowed($args['stock_managing'] > 1)
-		        ->withBackordersNotifications($args['stock_managing'] > 2);
+		        ->withBackordersNotifications($args['stock_managing'] > 2)
+		        ->withSaleDateStart($args['sale_start_date'])
+		        ->withSaleDateEnd($args['sale_end_date'])
+		        ->withShippingClass($args['shipping_class'])
+		        ->withAverageRating($args['average_rating'])
+		        ->withTotalSales($args['total_sales']);
 		if(!$product->is_type('variation')) {
 			if(!empty($args['category_ids'])) {
 				$product->withCategoryIDs( (array)json_decode( $args['category_ids'] ) );
@@ -402,7 +418,7 @@ class ProductsDAO {
 			$product->withSalePrice($args['min_price']);
 		}
 		if($product->managing_stock()) {
-			$product->withQuantity($args['quantity']);
+			$product->withStockQuantity($args['stock_quantity']);
 		}
 		if($product->is_type('variation') || $product->is_type('variable')) {
 			$product->withVariationAttributes((array)json_decode($args['attributes']));
